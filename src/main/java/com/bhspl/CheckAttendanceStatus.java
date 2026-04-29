@@ -1,3 +1,5 @@
+package com.bhspl;
+
 import com.bhspl.db.DatabaseManager;
 import com.bhspl.db.ConfigManager;
 import java.util.*;

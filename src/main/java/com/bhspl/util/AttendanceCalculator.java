@@ -32,7 +32,6 @@ public class AttendanceCalculator {
         LocalTime schedOut = LocalTime.of(18, 0);
         int grace = 5;
         double otThreshold = 9.0;
-        double breakHrs = 0.5;
 
         if (shift != null) {
             try {
@@ -55,7 +54,6 @@ public class AttendanceCalculator {
                     otThreshold = DatabaseManager.dbl(shift, "overtime_after");
                     if (otThreshold <= 0) otThreshold = DatabaseManager.dbl(shift, "work_hours");
                     if (otThreshold <= 0) otThreshold = 9.0;
-                    breakHrs = DatabaseManager.num(shift, "break_mins") / 60.0;
                 }
             } catch (Exception e) {
                 System.err.println("AttendanceCalculator: Shift parse error: " + e.getMessage());

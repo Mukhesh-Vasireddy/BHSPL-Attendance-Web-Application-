@@ -3,10 +3,8 @@ package com.bhspl;
 import com.bhspl.core.Config;
 import com.bhspl.ui.DBSetupWindow;
 import com.bhspl.ui.LoginWindow;
-import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import java.awt.Color;
 import java.util.Map;
 
 public class Main {

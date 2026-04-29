@@ -34,7 +34,7 @@ public class EmployeeDetail extends JDialog {
         try {
             r = db.queryOne("SELECT * FROM employees WHERE emp_id=?", empId);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error fetching employee: " + e.getMessage());
+            UIHelper.showError(this, "Error fetching employee: " + e.getMessage());
         }
 
         if (r == null) {

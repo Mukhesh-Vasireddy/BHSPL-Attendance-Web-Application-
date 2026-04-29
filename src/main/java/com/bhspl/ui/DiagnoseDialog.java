@@ -20,7 +20,6 @@ public class DiagnoseDialog extends JDialog {
     private final int password;
     private JTextArea logText;
     private JProgressBar progress;
-    private boolean alive = true;
 
     public DiagnoseDialog(JFrame parent, String ip, int port, int password) {
         super(parent, "Device Diagnostics — " + ip + ":" + port, true);
@@ -39,13 +38,20 @@ public class DiagnoseDialog extends JDialog {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(new Color(0x1e1e2e));
 
-        JPanel hdr = new JPanel();
+        JPanel hdr = new JPanel(new net.miginfocom.swing.MigLayout("ins 0 20 0 20, fill", "[] 15 [grow]", "[]"));
         hdr.setBackground(new Color(0x4a148c));
-        hdr.setPreferredSize(new Dimension(0, 50));
+        hdr.setPreferredSize(new Dimension(0, 60));
+        
+        try {
+            com.formdev.flatlaf.extras.FlatSVGIcon icon = new com.formdev.flatlaf.extras.FlatSVGIcon("icons/search.svg", 24, 24);
+            icon.setColorFilter(new com.formdev.flatlaf.extras.FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            hdr.add(new JLabel(icon), "aligny center");
+        } catch (Exception ignored) {}
+        
         JLabel title = new JLabel("Device Diagnostics — " + ip + ":" + port);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 15));
         title.setForeground(Color.WHITE);
-        hdr.add(title);
+        hdr.add(title, "aligny center");
         root.add(hdr, BorderLayout.NORTH);
 
         logText = new JTextArea();
@@ -66,7 +72,6 @@ public class DiagnoseDialog extends JDialog {
 
         JButton closeBtn = UIHelper.makeButton("Close", UIHelper.BTN_DANGER);
         closeBtn.addActionListener(e -> {
-            alive = false;
             dispose();
         });
         bot.add(closeBtn, BorderLayout.EAST);

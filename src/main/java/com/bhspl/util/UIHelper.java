@@ -7,6 +7,7 @@ import javax.swing.table.*;
 import net.miginfocom.swing.MigLayout;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 /**
  * Shared UI helpers — colors, button factory, table factory.
@@ -142,8 +143,211 @@ public class UIHelper {
         return result[0];
     }
 
+    // ── Styled message dialogs (replaces plain JOptionPane) ────────────────────
+
+    /** Shows a styled info dialog (violet). */
+    public static void showInfo(Component parent, String message) {
+        showStyledDialog(parent, "Information", message, PRIMARY, new Color(0xF3F0FF), "info.svg");
+    }
+
+    /** Shows a styled success dialog (green). */
+    public static void showSuccess(Component parent, String message) {
+        showStyledDialog(parent, "Success", message, new Color(0x059669), new Color(0xF0FDF4), "check.svg");
+    }
+
+    /** Shows a styled error dialog (red). */
+    public static void showError(Component parent, String message) {
+        showStyledDialog(parent, "Error", message, new Color(0xDC2626), new Color(0xFEF2F2), "x.svg");
+    }
+
+    /** Shows a styled warning dialog (amber). */
+    public static void showWarning(Component parent, String message) {
+        showStyledDialog(parent, "Warning", message, new Color(0xD97706), new Color(0xFFFBEB), "info.svg");
+    }
+
+    /**
+     * Core styled popup: coloured header bar + message + styled OK button.
+     * Replaces all plain JOptionPane.showMessageDialog calls.
+     */
+    private static void showStyledDialog(Component parent, String title, String message,
+            Color accent, Color bg, String iconPath) {
+        Window owner = parent instanceof Window w ? w
+                : (parent != null ? SwingUtilities.getWindowAncestor(parent) : null);
+        JDialog dlg = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setUndecorated(true);
+        dlg.setBackground(new Color(0, 0, 0, 0));
+        dlg.setSize(420, 240);
+        centerWindow(dlg, 420, 240);
+
+        RoundedPanel root = new RoundedPanel(16);
+        root.setBackground(Color.WHITE);
+        root.setLayout(new BorderLayout());
+        root.setBorder(BorderFactory.createLineBorder(new Color(0xE2E8F0), 1));
+
+        // Coloured top bar
+        JPanel header = new JPanel(new MigLayout("ins 0 20 0 20, fillx", "[shrink] 15 [grow]", "[52!]"));
+        header.setBackground(accent);
+
+        try {
+            FlatSVGIcon svgIcon = new FlatSVGIcon("icons/" + iconPath, 26, 26);
+            svgIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            header.add(new JLabel(svgIcon), "aligny center");
+        } catch (Exception ignored) {
+            JLabel iconLbl = new JLabel("i");
+            iconLbl.setFont(new Font("Segoe UI", Font.BOLD, 22));
+            iconLbl.setForeground(Color.WHITE);
+            header.add(iconLbl, "aligny center");
+        }
+
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        titleLbl.setForeground(Color.WHITE);
+        header.add(titleLbl, "growx");
+        root.add(header, BorderLayout.NORTH);
+
+        // Message
+        JLabel msgLbl = new JLabel("<html><body style='width:320px; padding:4px'>" +
+                message.replace("\n", "<br>") + "</body></html>");
+        msgLbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        msgLbl.setForeground(new Color(0x1E293B));
+        msgLbl.setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
+        root.add(msgLbl, BorderLayout.CENTER);
+
+        // OK button
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 10));
+        footer.setBackground(bg);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xE5E7EB)));
+
+        JButton ok = new JButton("OK");
+        ok.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        ok.setBackground(accent);
+        ok.setForeground(Color.WHITE);
+        ok.setFocusPainted(false);
+        ok.setBorderPainted(false);
+        ok.setOpaque(true);
+        ok.setPreferredSize(new Dimension(88, 34));
+        ok.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        ok.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                ok.setBackground(accent.darker());
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                ok.setBackground(accent);
+            }
+        });
+        ok.addActionListener(e -> dlg.dispose());
+        // Also close on Enter
+        dlg.getRootPane().setDefaultButton(ok);
+
+        footer.add(ok);
+        root.add(footer, BorderLayout.SOUTH);
+
+        dlg.setContentPane(root);
+        dlg.setVisible(true);
+    }
+
+    /**
+     * Styled YES/NO confirmation dialog. Returns true if user clicked Yes.
+     * Replaces JOptionPane.showConfirmDialog where only YES/NO are needed.
+     */
+    public static boolean confirmYesNo(Component parent, String title, String message) {
+        Window owner = parent instanceof Window w ? w
+                : (parent != null ? SwingUtilities.getWindowAncestor(parent) : null);
+        JDialog dlg = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setUndecorated(true);
+        dlg.setBackground(new Color(0, 0, 0, 0));
+        dlg.setSize(440, 260);
+        centerWindow(dlg, 440, 260);
+
+        final boolean[] result = { false };
+        Color accent = PRIMARY;
+
+        RoundedPanel root = new RoundedPanel(16);
+        root.setBackground(Color.WHITE);
+        root.setLayout(new BorderLayout());
+        root.setBorder(BorderFactory.createLineBorder(new Color(0xE2E8F0), 1));
+        JPanel header = new JPanel(new MigLayout("ins 0 20 0 20, fillx", "[shrink] 15 [grow]", "[52!]"));
+        header.setBackground(accent);
+
+        try {
+            FlatSVGIcon svgIcon = new FlatSVGIcon("icons/info.svg", 26, 26);
+            svgIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            header.add(new JLabel(svgIcon), "aligny center");
+        } catch (Exception ignored) {
+            JLabel iconLbl = new JLabel("?");
+            iconLbl.setFont(new Font("Segoe UI", Font.BOLD, 22));
+            iconLbl.setForeground(Color.WHITE);
+            header.add(iconLbl, "aligny center");
+        }
+
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        titleLbl.setForeground(Color.WHITE);
+        header.add(titleLbl, "growx, aligny center");
+        root.add(header, BorderLayout.NORTH);
+
+        // Message
+        JLabel msgLbl = new JLabel("<html><body style='width:340px; padding:4px'>" +
+                message.replace("\n", "<br>") + "</body></html>");
+        msgLbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        msgLbl.setForeground(new Color(0x1E293B));
+        msgLbl.setBorder(BorderFactory.createEmptyBorder(16, 20, 8, 20));
+        root.add(msgLbl, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        footer.setBackground(Color.WHITE);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xE5E7EB)));
+
+        JButton noBtn = styledDialogBtn("No", new Color(0x6B7280));
+        JButton yesBtn = styledDialogBtn("Yes", accent);
+
+        noBtn.addActionListener(e -> dlg.dispose());
+        yesBtn.addActionListener(e -> {
+            result[0] = true;
+            dlg.dispose();
+        });
+
+        dlg.getRootPane().setDefaultButton(yesBtn);
+        footer.add(noBtn);
+        footer.add(yesBtn);
+        root.add(footer, BorderLayout.SOUTH);
+
+        dlg.setContentPane(root);
+        dlg.setVisible(true);
+        return result[0];
+    }
+
+    private static JButton styledDialogBtn(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setBorderPainted(false);
+        b.setOpaque(true);
+        b.setPreferredSize(new Dimension(88, 34));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                b.setBackground(bg.darker());
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                b.setBackground(bg);
+            }
+        });
+        return b;
+    }
+
     // ── darken a color slightly (for hover) ──────────────────────────────────
     public static Color darken(Color c) {
+
         float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
         return Color.getHSBColor(hsb[0], hsb[1], Math.max(0f, hsb[2] - 0.08f));
     }
@@ -439,45 +643,8 @@ public class UIHelper {
         }
     }
 
-    public static void showSuccess(Component parent, String message) {
-        showMessage(parent, "Success", message, SUCCESS);
-    }
-
-    public static void showError(Component parent, String message) {
-        showMessage(parent, "Error", message, DANGER);
-    }
-
-    private static void showMessage(Component parent, String title, String message, Color color) {
-        JDialog dlg = new JDialog(parent instanceof Window ? (Window) parent : null, title,
-                Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setUndecorated(true);
-        dlg.setBackground(new Color(0, 0, 0, 0));
-
-        RoundedPanel card = new RoundedPanel(16);
-        card.setBackground(Color.WHITE);
-        card.setLayout(new MigLayout("ins 24, wrap, gap 16", "[320!]", "[] [] []"));
-
-        JLabel titleLbl = new JLabel(title.toUpperCase());
-        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        titleLbl.setForeground(color);
-
-        JLabel msgLbl = new JLabel("<html><div style='width: 280px;'>" + message + "</div></html>");
-        msgLbl.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        msgLbl.setForeground(TEXT_DARK);
-
-        JButton okBtn = makeButton("OK", color);
-        okBtn.addActionListener(e -> dlg.dispose());
-
-        card.add(titleLbl);
-        card.add(msgLbl);
-        card.add(okBtn, "right, gaptop 10, w 80!");
-
-        dlg.setContentPane(card);
-        dlg.pack();
-        dlg.setLocationRelativeTo(parent);
-        dlg.setVisible(true);
-    }
     /**
+     * 
      * A modern multi-color gradient panel inspired by the brand logo.
      * Supports Purple, Magenta, and Orange transitions.
      */
@@ -495,13 +662,13 @@ public class UIHelper {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
+
             // 1. Deeply Muted Multi-color Gradient (Purple, Magenta, Orange)
-            float[] fractions = {0.0f, 0.5f, 1.0f};
+            float[] fractions = { 0.0f, 0.5f, 1.0f };
             Color[] colors = {
-                new Color(0x312e81), // Deep Navy/Purple
-                new Color(0x701a75), // Muted Magenta
-                new Color(0x7c2d12)  // Deep Muted Orange
+                    new Color(0x312e81), // Deep Navy/Purple
+                    new Color(0x701a75), // Muted Magenta
+                    new Color(0x7c2d12) // Deep Muted Orange
             };
             LinearGradientPaint lgp = new LinearGradientPaint(0, 0, getWidth(), getHeight(), fractions, colors);
             g2.setPaint(lgp);
@@ -519,12 +686,27 @@ public class UIHelper {
 
             // 3. Dark Overlay
             if (overlayOpacity > 0) {
-                g2.setColor(new Color(0, 0, 0, (int)(255 * overlayOpacity)));
+                g2.setColor(new Color(0, 0, 0, (int) (255 * overlayOpacity)));
                 g2.fillRect(0, 0, getWidth(), getHeight());
             }
 
             g2.dispose();
             super.paintComponent(g);
         }
+    }
+
+    /**
+     * Creates a standardized summary label for the bottom of panels.
+     * Indigo-900 style matching the modernization requirements.
+     */
+    public static JLabel createSummaryLabel(String initialText) {
+        JLabel label = new JLabel(initialText);
+        label.setOpaque(true);
+        label.setBackground(new Color(0x312E81)); // Indigo 900
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        label.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        label.setHorizontalAlignment(SwingConstants.LEFT);
+        return label;
     }
 }

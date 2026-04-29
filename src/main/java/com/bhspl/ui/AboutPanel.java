@@ -5,78 +5,127 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/**
+ * Modern Corporate About Page for BHSPL.
+ * Clean, light-themed, and aligned with the enterprise dashboard aesthetic.
+ */
 public class AboutPanel extends JPanel {
+
     public AboutPanel() {
-        setLayout(new MigLayout("ins 0, fill, wrap", "[grow]", "[35%!] [grow]"));
-        setBackground(new Color(0x0F172A)); // Dark Blue Header Background
-
-        // Header Section
-        JPanel header = new JPanel(new MigLayout("ins 0, fill, wrap", "[center]", "push [] 20 [] 10 [] push"));
-        header.setOpaque(false);
-
-        FlatSVGIcon buildingIcon = new FlatSVGIcon("icons/building.svg", 80, 80);
-        buildingIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
-        header.add(new JLabel(buildingIcon));
-
-        JLabel title = new JLabel("BHSPL ATTENDANCE APP");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        title.setForeground(Color.WHITE);
-        header.add(title);
-
-        JLabel subtitle = new JLabel("Biometric Attendance Management System");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        subtitle.setForeground(new Color(0x94A3B8));
-        header.add(subtitle);
-
-        add(header, "grow");
-
-        // Content Section
-        JPanel contentArea = new JPanel(new MigLayout("ins 40, center, wrap", "[center]", "[]"));
-        contentArea.setBackground(Color.WHITE);
-
-        UIHelper.RoundedPanel card = new UIHelper.RoundedPanel(16);
-        card.setBackground(Color.WHITE);
-        card.setBorderColor(new Color(0xE2E8F0));
-        card.setLayout(new MigLayout("ins 40, wrap 2, gap 25 20", "[shrink] 30 [grow, left]", "[]"));
-
-        addInfoRow(card, "Company", "Bavya Health Services Pvt Ltd", "icons/home.svg");
-        addInfoRow(card, "Location", "Vijayawada", "icons/map_marker.svg");
-        addInfoRow(card, "Website", "www.bhspl.in", "icons/web.svg");
-
-        card.add(new JSeparator(), "span 2, growx, gaptop 10, gapbottom 10");
-
-        addInfoRow(card, "Developed by", "Mukhesh Vasireddy", "icons/user.svg");
-        addInfoRow(card, "Email", "mukhesh.vasireddy@bhspl.in", "icons/email.svg");
-
-        card.add(new JSeparator(), "span 2, growx, gaptop 10, gapbottom 10");
-
-        addInfoRow(card, "Copyright", "Bavya Health Services Pvt Ltd", "icons/copyright.svg");
-        addInfoRow(card, "Version", "2.0 | 2026", "icons/star.svg");
-
-        contentArea.add(card, "w 650!");
-        add(contentArea, "grow");
+        setLayout(new MigLayout("ins 0, fill", "[grow]", "[grow]"));
+        setBackground(UIHelper.BG_MAIN);
+        buildUI();
     }
 
-    private void addInfoRow(JPanel parent, String label, String value, String iconPath) {
-        JPanel labelSide = new JPanel(new MigLayout("ins 0, gap 12", "[] []", "[]"));
-        labelSide.setOpaque(false);
+    private void buildUI() {
+        // Main Container
+        JPanel container = new JPanel(new MigLayout("ins 40, fill", "[grow]", "[grow]"));
+        container.setOpaque(false);
 
-        FlatSVGIcon icon = new FlatSVGIcon(iconPath, 18, 18);
-        icon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> new Color(0x1E293B)));
-        labelSide.add(new JLabel(icon));
+        // Corporate Info Card
+        JPanel card = new JPanel(new MigLayout("ins 0, wrap, fillx", "[grow, fill]", "[] [grow] []"));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createLineBorder(UIHelper.BORDER, 1, true));
 
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lbl.setForeground(new Color(0x334155));
-        labelSide.add(lbl);
+        // 1. Header Bar (Brand Purple)
+        JPanel header = new JPanel(new MigLayout("ins 20 30, gap 20", "[] [grow]", "[]"));
+        header.setBackground(UIHelper.PRIMARY);
 
-        parent.add(labelSide);
+        try {
+            FlatSVGIcon logoIcon = new FlatSVGIcon("icons/biometric.svg", 48, 48);
+            logoIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            header.add(new JLabel(logoIcon));
+        } catch (Exception ignored) {
+        }
 
-        JLabel val = new JLabel(value);
-        val.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        val.setForeground(new Color(0x475569));
-        parent.add(val);
+        JPanel titleCont = new JPanel(new MigLayout("ins 0, wrap", "[grow]"));
+        titleCont.setOpaque(false);
+
+        JLabel title = new JLabel("BHSPL Attendance Management System");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(Color.WHITE);
+        titleCont.add(title);
+
+        JLabel version = new JLabel("Enterprise Edition | Version 2.0.42");
+        version.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        version.setForeground(new Color(0xE0E7FF));
+        titleCont.add(version);
+
+        header.add(titleCont);
+        card.add(header, "growx");
+
+        // 2. Content Area
+        JPanel content = new JPanel(new MigLayout("ins 30 40 30 40, wrap, gapy 25", "[grow, fill]"));
+        content.setOpaque(false);
+
+        // Info Sections
+        content.add(createInfoSection("Company Information", new String[][] {
+                { "Proprietor", "Bavya Health Services Pvt Ltd", "building.svg" },
+                { "Headquarters", "Vijayawada, Andhra Pradesh, India", "map_marker.svg" }
+        }));
+
+        content.add(createInfoSection("Support & Contact", new String[][] {
+                { "Email Support", "mukhesh.vasireddy@bhspl.in", "email.svg" },
+                { "Web Portal", "www.bhspl.in", "web.svg" },
+                { "Developer", "Mukhesh Vasireddy", "user.svg" }
+        }));
+
+        card.add(content, "grow");
+
+        // 3. Footer
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 15));
+        footer.setBackground(new Color(0xF8FAFC));
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIHelper.BORDER));
+
+        JLabel copy = new JLabel("© 2026 BHSPL. All Rights Reserved. Licensed for Enterprise Use.");
+        copy.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        copy.setForeground(UIHelper.TEXT_MUTE);
+        footer.add(copy);
+
+        card.add(footer, "growx");
+
+        container.add(card, "center, w 700!");
+        add(container, "grow");
+    }
+
+    private JPanel createInfoSection(String sectionTitle, String[][] rows) {
+        JPanel section = new JPanel(new MigLayout("ins 0, wrap", "[grow, fill]"));
+        section.setOpaque(false);
+
+        JLabel sTitle = new JLabel(sectionTitle.toUpperCase());
+        sTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        sTitle.setForeground(UIHelper.PRIMARY);
+        sTitle.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIHelper.BORDER));
+        section.add(sTitle, "gapbottom 10");
+
+        for (String[] row : rows) {
+            JPanel rowPanel = new JPanel(new MigLayout("ins 5 0, gap 15", "[] []", "[]"));
+            rowPanel.setOpaque(false);
+
+            try {
+                FlatSVGIcon icon = new FlatSVGIcon("icons/" + row[2], 18, 18);
+                icon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> UIHelper.TEXT_LIGHT));
+                rowPanel.add(new JLabel(icon));
+            } catch (Exception ignored) {
+            }
+
+            JLabel label = new JLabel(row[0] + ":");
+            label.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 14));
+            label.setForeground(UIHelper.TEXT_LIGHT);
+            label.setPreferredSize(new Dimension(120, 20));
+            rowPanel.add(label);
+
+            JLabel value = new JLabel(row[1]);
+            value.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            value.setForeground(UIHelper.TEXT_DARK);
+            rowPanel.add(value);
+
+            section.add(rowPanel);
+        }
+
+        return section;
     }
 }

@@ -84,7 +84,7 @@ public class UserForm extends JDialog {
         try {
             String hash = pass.isEmpty() ? null : HashUtil.sha256(pass);
             if (id == null) {
-                if (pass.isEmpty()) { JOptionPane.showMessageDialog(this, "Password is required for new users."); return; }
+                if (pass.isEmpty()) { UIHelper.showWarning(this, "Password is required for new users."); return; }
                 db.execute("INSERT INTO users (username, password_hash, role, emp_id, status) VALUES (?,?,?,?,?)",
                     user, hash, roleCombo.getSelectedItem(), empIdField.getText().trim(), statusCombo.getSelectedItem());
             } else {

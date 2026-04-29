@@ -23,7 +23,6 @@ public class SyncService {
     private static final java.util.concurrent.atomic.AtomicBoolean isSyncing = new java.util.concurrent.atomic.AtomicBoolean(
             false);
     private static boolean IsRunning = false;
-    private static long lastDeepSyncTime = 0;
 
     private static void logToFile(String msg) {
         try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("sync_debug.txt", true))) {

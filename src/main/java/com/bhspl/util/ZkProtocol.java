@@ -26,7 +26,6 @@ public class ZkProtocol {
     private static final int ZK_CMD_FREE_DATA = 1502;
     private static final int ZK_CMD_PREPARE_DATA = 1500;
     private static final int ZK_CMD_DATA = 1501;
-    private static final int ZK_CMD_USER = 1504;
 
     private final String ip;
     private final int port;
@@ -523,20 +522,162 @@ public class ZkProtocol {
         return new String(data, offset, len);
     }
 
+    /**
+     * Fetches users from the ZK device.
+     * 
+     * Diagnostic findings for this specific device:
+     *   - CMD 1503 + FCT_USER payload → returns CMD 2000 (ACK_OK) with NO data — NOT SUPPORTED
+     *   - CMD 9 (USERTEMP_RRQ) direct → returns CMD 1500 (PREPARE_DATA) with totalSize=3388 ✓
+     *   - CMD 13 (READALLDATA)        → returns CMD 1501 DATA chunks (for attendance)
+     * 
+     * So we use CMD 9 directly, then read the CMD 1501 DATA chunks with ACK_OK like CMD 13.
+     * 
+     * 28-byte user record struct (Python pyzk '<HB5s8sIxBhI'):
+     *   offset  0: uid        (2 bytes short LE)
+     *   offset  2: privilege  (1 byte)
+     *   offset  3: password   (5 bytes)
+     *   offset  8: name       (8 bytes, null-terminated UTF-8)
+     *   offset 16: card       (4 bytes int LE)
+     *   offset 20: x (pad)   (1 byte)
+     *   offset 21: group_id  (1 byte)
+     *   offset 22: timezone  (2 bytes)
+     *   offset 24: user_id   (4 bytes int LE) ← enrollment ID matched to device_enroll_id
+     *   TOTAL = 28 bytes
+     */
     public List<Map<String, String>> getUsers() {
         List<Map<String, String>> users = new ArrayList<>();
-        byte[] data = fetchData(ZK_CMD_USER);
-        if (data == null)
-            return users;
-        int recSize = 28;
-        for (int i = 0; i + recSize <= data.length; i += recSize) {
-            String uid = String.valueOf(getShortLE(data, i));
-            String name = readString(data, i + 2, 24).trim();
-            Map<String, String> u = new HashMap<>();
-            u.put("user_id", uid);
-            u.put("name", name);
-            users.add(u);
+        System.out.println("ZkProtocol: getUsers() — using CMD 9 (USERTEMP_RRQ)");
+
+        try {
+            // Send CMD 9 directly (no payload needed)
+            byte[] resp = sendAndReceive(9, null);
+            if (resp == null) {
+                System.err.println("ZkProtocol: getUsers — no response from CMD 9");
+                return users;
+            }
+
+            int respCmd = getShortLE(resp, 0);
+            System.out.println("ZkProtocol: getUsers CMD 9 response code = " + respCmd + " len=" + resp.length);
+
+            if (respCmd != ZK_CMD_PREPARE_DATA) {
+                System.err.println("ZkProtocol: getUsers — expected PREPARE_DATA (1500), got " + respCmd);
+                return users;
+            }
+
+            int totalSize = (int) getIntLE(resp, 8);
+            System.out.println("ZkProtocol: getUsers expecting " + totalSize + " bytes (" + (totalSize / 28) + " possible 28-byte slots)");
+
+            // Read the streamed DATA chunks exactly like CMD 13 does for attendance
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            for (int i = 0; i < 2000; i++) {
+                if (bos.size() >= totalSize) break;
+                byte[] chunk = recv();
+                if (chunk == null) break;
+
+                int chunkCmd = getShortLE(chunk, 0);
+                if (chunkCmd == ZK_CMD_DATA) {          // 1501
+                    int dataLen = chunk.length - 8;
+                    if (dataLen > 0) bos.write(chunk, 8, dataLen);
+                    // Acknowledge each chunk
+                    send(makePacket(ZK_CMD_ACK_OK, session, ++replyId, null));
+                } else {
+                    System.out.println("ZkProtocol: getUsers chunk loop got CMD=" + chunkCmd + ", stopping");
+                    break;
+                }
+            }
+
+            // Free the device buffer
+            send(makePacket(ZK_CMD_FREE_DATA, session, ++replyId, null));
+            recv();
+
+            byte[] userdata = bos.toByteArray();
+            System.out.println("ZkProtocol: getUsers received " + userdata.length + " bytes total");
+
+            if (userdata.length < 4) {
+                System.err.println("ZkProtocol: getUsers — insufficient data");
+                return users;
+            }
+
+            // First 4 bytes = declared size header
+            int declaredSize = (int) getIntLE(userdata, 0);
+            System.out.println("ZkProtocol: getUsers declared size in header = " + declaredSize);
+
+            // Auto-detect record size: Python pyzk supports 28 and 72 bytes.
+            // 28-byte struct '<HB5s8sIxBhI':  user_id is a 4-byte int  at offset 24
+            // 72-byte struct '<HB8s24sIx7sx24s': user_id is a 24-byte str at offset 48 (preserves leading zeros!)
+            // Calculate from actual data: (totalBytes - 4 header) / userCount
+            // We know totalSize from PREPARE_DATA and we'll detect from the data length.
+            int dataBytes = userdata.length - 4;
+            int recSize;
+            if (dataBytes > 0 && dataBytes % 72 == 0) {
+                recSize = 72;
+            } else if (dataBytes > 0 && dataBytes % 28 == 0) {
+                recSize = 28;
+            } else {
+                // Fallback: guess based on which divides better
+                recSize = (dataBytes % 72 < dataBytes % 28) ? 72 : 28;
+            }
+            System.out.println("ZkProtocol: getUsers using " + recSize + "-byte record format (" + (dataBytes / recSize) + " records)");
+
+            int offset = 4;
+            Set<String> seen = new HashSet<>();
+
+            while (offset + recSize <= userdata.length) {
+                int uid = getShortLE(userdata, offset);   // 2 bytes at 0 (internal device UID)
+                String name, userIdStr;
+
+                if (recSize == 72) {
+                    // 72-byte: '<HB8s24sIx7sx24s'
+                    // offset  0: uid        (2 bytes short)
+                    // offset  2: privilege  (1 byte)
+                    // offset  3: password   (8 bytes)
+                    // offset 11: name       (24 bytes string — null-terminated)
+                    // offset 35: card       (4 bytes int)
+                    // offset 39: x (pad)   (1 byte)
+                    // offset 40: group_id  (7 bytes string)
+                    // offset 47: x (pad)   (1 byte)
+                    // offset 48: user_id   (24 bytes string — preserves leading zeros like "07544"!)
+                    name      = readString(userdata, offset + 11, 24).trim();
+                    userIdStr = readString(userdata, offset + 48, 24).trim();
+                } else {
+                    // 28-byte: '<HB5s8sIxBhI'
+                    // offset  0: uid        (2 bytes short)
+                    // offset  2: privilege  (1 byte)
+                    // offset  3: password   (5 bytes)
+                    // offset  8: name       (8 bytes string)
+                    // offset 16: card       (4 bytes int)
+                    // offset 20: x (pad)   (1 byte)
+                    // offset 21: group_id  (1 byte)
+                    // offset 22: timezone  (2 bytes)
+                    // offset 24: user_id   (4 bytes int — loses leading zeros)
+                    name = readString(userdata, offset + 8, 8).trim();
+                    int userId = (int) getIntLE(userdata, offset + 24);
+                    userIdStr = String.valueOf(userId);
+                }
+
+                if (name.isEmpty()) name = "NN-" + userIdStr;
+
+                System.out.println("  User: uid=" + uid + " user_id=[" + userIdStr + "] name=" + name);
+
+                if (!userIdStr.isEmpty() && !userIdStr.equals("0") && !seen.contains(userIdStr)) {
+                    seen.add(userIdStr);
+                    Map<String, String> u = new HashMap<>();
+                    u.put("user_id", userIdStr);   // enrollment ID — exact string from device (preserves leading zeros)
+                    u.put("name", name);
+                    u.put("uid", String.valueOf(uid));
+                    users.add(u);
+                }
+
+                offset += recSize;
+            }
+
+            System.out.println("ZkProtocol: getUsers complete — found " + users.size() + " unique users.");
+
+        } catch (Exception e) {
+            System.err.println("ZkProtocol: getUsers exception: " + e.getMessage());
+            e.printStackTrace();
         }
+
         return users;
     }
 
@@ -548,3 +689,4 @@ public class ZkProtocol {
         return info;
     }
 }
+

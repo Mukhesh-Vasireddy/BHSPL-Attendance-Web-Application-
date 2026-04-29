@@ -1,7 +1,6 @@
 package com.bhspl;
 
 import com.bhspl.util.ZkProtocol;
-import java.util.*;
 
 public class CheckFinalRecord {
     public static void main(String[] args) {

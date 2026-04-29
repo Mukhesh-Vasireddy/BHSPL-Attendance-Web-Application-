@@ -100,7 +100,7 @@ public class ManualPunch extends JDialog {
         String dateStr = dateField.getText().trim();
         
         if (eid.isEmpty() || dateStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Employee ID and Date are required fields.", "Input Error", JOptionPane.WARNING_MESSAGE);
+            UIHelper.showWarning(this, "Employee ID and Date are required fields.");
             return;
         }
 
@@ -108,13 +108,13 @@ public class ManualPunch extends JDialog {
             DatabaseManager db = DatabaseManager.getInstance();
             Map<String, Object> emp = db.fetchOne("SELECT * FROM employees WHERE emp_id=?", eid);
             if (emp == null) {
-                JOptionPane.showMessageDialog(this, "Employee not found in database.", "Not Found", JOptionPane.ERROR_MESSAGE);
+                UIHelper.showError(this, "Employee not found in database.");
                 return;
             }
 
             LocalDate punchDate = parseDate(dateStr);
             if (punchDate == null) {
-                JOptionPane.showMessageDialog(this, "Invalid date format. Please use DD-MM-YYYY.", "Date Error", JOptionPane.ERROR_MESSAGE);
+                UIHelper.showError(this, "Invalid date format. Please use DD-MM-YYYY.");
                 return;
             }
 
@@ -142,11 +142,11 @@ public class ManualPunch extends JDialog {
                 eid, punchDate.toString(), inDt, outDt, workHours, overtime, statusCombo.getSelectedItem().toString(), lateMins, punchTypeCombo.getSelectedItem().toString(), remarksField.getText().trim(),
                 inDt, outDt, workHours, overtime, statusCombo.getSelectedItem().toString(), lateMins, punchTypeCombo.getSelectedItem().toString(), remarksField.getText().trim());
 
-            JOptionPane.showMessageDialog(this, "Attendance successfully recorded.");
+            UIHelper.showSuccess(this, "Attendance successfully recorded.");
             if (callback != null) callback.run();
             dispose();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+            UIHelper.showError(this, "Database Error: " + e.getMessage());
         }
     }
 

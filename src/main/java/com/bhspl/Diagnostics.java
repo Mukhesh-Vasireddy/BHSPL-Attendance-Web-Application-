@@ -1,6 +1,6 @@
+package com.bhspl;
 
 import com.bhspl.db.DatabaseManager;
-import com.bhspl.core.Config;
 import java.util.*;
 
 public class Diagnostics {

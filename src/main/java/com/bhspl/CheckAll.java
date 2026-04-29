@@ -1,6 +1,5 @@
 package com.bhspl;
 
-import java.sql.*;
 import java.util.*;
 import com.bhspl.db.*;
 

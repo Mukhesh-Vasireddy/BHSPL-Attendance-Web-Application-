@@ -1,7 +1,6 @@
 package com.bhspl.debug;
 
 import java.net.*;
-import java.io.*;
 
 public class TestConnection {
     public static void main(String[] args) {

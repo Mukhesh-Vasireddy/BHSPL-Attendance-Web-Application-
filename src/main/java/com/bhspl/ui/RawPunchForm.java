@@ -37,7 +37,7 @@ public class RawPunchForm extends JDialog {
         // Header
         UIHelper.GradientPanel hdr = new UIHelper.GradientPanel(UIHelper.PRIMARY, UIHelper.SECONDARY);
         hdr.setLayout(new MigLayout("ins 20", "[] 15 [grow]"));
-        hdr.add(new JLabel(new com.formdev.flatlaf.extras.FlatSVGIcon("icons/raw_logs.svg", 32, 32)));
+        hdr.add(new JLabel(new com.formdev.flatlaf.extras.FlatSVGIcon("icons/punch_log.svg", 32, 32)));
         
         JLabel title = new JLabel("Add Manual Raw Punch");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));

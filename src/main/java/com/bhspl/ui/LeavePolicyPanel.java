@@ -76,7 +76,7 @@ public class LeavePolicyPanel extends JPanel {
                 if (e.getClickCount() == 2) edit();
             }
         });
-        add(tablePanel, "grow, push");
+        add(tablePanel, "grow, push, wmin 0");
 
         // Status Bar
         statusLbl = new JLabel("Loading policies...");

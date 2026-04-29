@@ -45,7 +45,7 @@ public class ProfilePanel extends JPanel {
         roleLbl.setForeground(UIHelper.TEXT_LIGHT);
         card.add(roleLbl);
 
-        JButton logoutBtn = UIHelper.makeButton("Log Out Securely", UIHelper.DANGER);
+        JButton logoutBtn = UIHelper.makeButton("Log Out Securely", UIHelper.DANGER, "logout.svg");
         logoutBtn.addActionListener(e -> logout());
         card.add(logoutBtn, "growx, h 40!");
         
@@ -93,8 +93,7 @@ public class ProfilePanel extends JPanel {
     }
     
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (UIHelper.confirm(this, "Logout", "Are you sure you want to logout?")) {
             DatabaseManager.getInstance().close();
             JFrame parent = (JFrame) SwingUtilities.getWindowAncestor(this);
             if (parent != null) {

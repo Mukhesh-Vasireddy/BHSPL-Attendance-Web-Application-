@@ -54,11 +54,11 @@ public class ResetPasswordDialog extends JDialog {
         String p1 = new String(passField.getPassword());
         String p2 = new String(confField.getPassword());
         if (p1.isEmpty()) return;
-        if (!p1.equals(p2)) { JOptionPane.showMessageDialog(this, "Passwords do not match."); return; }
+        if (!p1.equals(p2)) { UIHelper.showWarning(this, "Passwords do not match."); return; }
         try {
             String hash = com.bhspl.util.HashUtil.sha256(p1);
             DatabaseManager.INSTANCE.execute("UPDATE users SET password_hash=? WHERE id=?", hash, userId);
-            JOptionPane.showMessageDialog(this, "Password updated successfully.");
+            UIHelper.showSuccess(this, "Password updated successfully.");
             dispose();
         } catch (Exception e) {}
     }

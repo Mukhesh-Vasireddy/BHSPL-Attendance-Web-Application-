@@ -19,17 +19,21 @@ public class MainApp extends JFrame {
     private CardLayout cardLayout;
     private JLabel pageTitle;
     private ReportsPanel reportsPanel;
+    private DashboardPanel dashboard;
+    private final java.util.Map<String, JPanel> panelCache = new java.util.HashMap<>();
 
     private static final Object[][] NAV_ITEMS = {
             { "Dashboard", "dashboard.svg", null },
             { "Employee Master", "employees.svg", null },
             { "Attendance", "attendance.svg", null },
-            { "FOLDER:Reports", "reports.svg", new String[]{"Daily", "Monthly", "Leave Report"} },
+            { "FOLDER:Reports", "reports.svg", new String[] { "Daily", "Monthly", "Leave Report" } },
             { "Raw Punch Log", "punch_log.svg", null },
             { "Device Manager", "devices.svg", null },
-            { "FOLDER:Leave", "leaves.svg", new String[]{"Leave Manager", "OD Requests", "Leave Policy", "Leave Balance", "Holidays"} },
-            { "FOLDER:Masters", "designation.svg", new String[]{"Departments", "Designations", "Shifts", "Weekly Off"} },
-            { "FOLDER:System", "settings.svg", new String[]{"User Management", "Settings", "DB Backup", "About"} }
+            { "FOLDER:Leave", "leaves.svg",
+                    new String[] { "Leave Manager", "OD Requests", "Leave Policy", "Leave Balance", "Holidays" } },
+            { "FOLDER:Masters", "designation.svg",
+                    new String[] { "Departments", "Designations", "Shifts", "Weekly Off" } },
+            { "FOLDER:System", "settings.svg", new String[] { "User Management", "Settings", "DB Backup", "About" } }
     };
 
     public MainApp(String username, String role) {
@@ -39,7 +43,7 @@ public class MainApp extends JFrame {
         setTitle("BHSPL Attendance Management System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1280, 800);
-        setMinimumSize(new Dimension(1024, 700));
+        setMinimumSize(new Dimension(900, 600));
         setLocationRelativeTo(null);
 
         buildUI();
@@ -67,10 +71,11 @@ public class MainApp extends JFrame {
                         if (logoUrl != null) {
                             Image img = javax.imageio.ImageIO.read(logoUrl);
                             Graphics2D g2 = (Graphics2D) g.create();
-                            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                                    RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            
+
                             int w = getWidth();
                             int h = (w * img.getHeight(null)) / img.getWidth(null);
                             if (h > getHeight()) {
@@ -80,7 +85,8 @@ public class MainApp extends JFrame {
                             g2.drawImage(img, (getWidth() - w) / 2, (getHeight() - h) / 2, w, h, null);
                             g2.dispose();
                         }
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                 }
             };
             logoPanel.add(logoLabel, "w 180!, h 60!, center");
@@ -124,25 +130,33 @@ public class MainApp extends JFrame {
                 tabsPanel.add(folderBtn, "growx");
 
                 for (String sub : subItems) {
-                    if ("Settings".equals(sub) && "Operator".equals(role)) continue;
-                    
+                    if ("Settings".equals(sub) && "Operator".equals(role))
+                        continue;
+
                     JToggleButton subBtn = createSubNavButton(sub);
                     navGroup.add(subBtn);
                     subMenu.add(subBtn, "growx");
-                    
+
                     subBtn.addActionListener(e -> {
+                        String pageName = sub;
                         if ("Daily".equals(sub) || "Monthly".equals(sub) || "Leave Report".equals(sub)) {
-                            cardLayout.show(contentPanel, "Reports");
+                            pageName = "Reports";
+                        }
+
+                        ensurePanelLoaded(pageName);
+                        cardLayout.show(contentPanel, pageName);
+
+                        if ("Reports".equals(pageName)) {
                             pageTitle.setText("Reports - " + sub);
-                            if (reportsPanel != null) reportsPanel.setActiveTab(sub);
+                            if (reportsPanel != null)
+                                reportsPanel.setActiveTab(sub);
                         } else {
-                            cardLayout.show(contentPanel, sub);
                             pageTitle.setText(sub);
                         }
                     });
                 }
                 tabsPanel.add(subMenu, "growx, hidemode 3");
-                
+
                 folderBtn.addActionListener(e -> {
                     boolean visible = !subMenu.isVisible();
                     subMenu.setVisible(visible);
@@ -152,7 +166,14 @@ public class MainApp extends JFrame {
                 JToggleButton btn = createNavButton(label, iconPath);
                 navGroup.add(btn);
                 tabsPanel.add(btn, "growx");
-                if (firstBtn == null) firstBtn = btn;
+                if (firstBtn == null)
+                    firstBtn = btn;
+
+                btn.addActionListener(e -> {
+                    ensurePanelLoaded(label);
+                    cardLayout.show(contentPanel, label);
+                    pageTitle.setText(label);
+                });
             }
         }
         JScrollPane navScroll = new JScrollPane(tabsPanel);
@@ -162,7 +183,7 @@ public class MainApp extends JFrame {
         navScroll.getVerticalScrollBar().setUnitIncrement(16);
         navScroll.getVerticalScrollBar().putClientProperty("JScrollBar.showButtons", false);
         navScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        
+
         sidebar.add(navScroll, "grow, pushy");
         add(sidebar, "grow");
 
@@ -178,75 +199,133 @@ public class MainApp extends JFrame {
         });
 
         // ----- MAIN AREA -----
-        JPanel mainArea = new JPanel(new MigLayout("ins 0, gap 0, wrap, fill", "[grow]", "[52!][grow][]"));
+        JPanel mainArea = new JPanel(new MigLayout("ins 0, gap 0, wrap, fill", "[grow]", "[min!]0[grow]0[28!]"));
         mainArea.setBackground(UIHelper.BG_MAIN);
 
-        // Header
-        JPanel header = new JPanel(new MigLayout("ins 0 24 0 24, aligny center", "[grow] [] []", "[grow]"));
+        // Header — Uses MigLayout for better responsiveness than BorderLayout
+        JPanel header = new JPanel(new MigLayout("ins 0 24 0 24, fill, gap 10", "[grow] [pref!]", "[:52:52]"));
         header.setBackground(Color.WHITE);
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIHelper.BORDER));
 
+        // LEFT — page title
         pageTitle = new JLabel("Dashboard");
         pageTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         pageTitle.setForeground(UIHelper.PRIMARY);
-        header.add(pageTitle, "growx");
+        header.add(pageTitle, "left, growx, pushx");
 
+        // RIGHT — clock + sync button + user box
+        JPanel rightPanel = new JPanel(new MigLayout("ins 0, gap 16, aligny center", "[] [] [] [] []", "[]"));
+        rightPanel.setOpaque(false);
+
+        // Clock
         JLabel clockLbl = new JLabel();
-        clockLbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        clockLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         clockLbl.setForeground(UIHelper.TEXT_LIGHT);
-        header.add(clockLbl);
+        rightPanel.add(clockLbl, "hidemode 3"); // hidemode 3 ensures it takes no space when hidden
 
-        // User Info & Logout
-        JPanel userBox = new JPanel(new MigLayout("ins 0, gap 10", "[] 5 [] 15 []"));
-        userBox.setOpaque(false);
-        
-        JLabel userLbl = new JLabel(username);
-        userLbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        userLbl.setForeground(UIHelper.PRIMARY);
-        
-        FlatSVGIcon uIcon = new FlatSVGIcon("icons/user.svg", 20, 20);
-        uIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> UIHelper.PRIMARY));
-        JLabel userIconLbl = new JLabel(uIcon);
-        
-        FlatSVGIcon lIcon = new FlatSVGIcon("icons/logout.svg", 20, 20);
-        lIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> UIHelper.DANGER));
-        JButton logoutBtn = new JButton(lIcon);
-        logoutBtn.setContentAreaFilled(false);
-        logoutBtn.setBorderPainted(false);
-        logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        logoutBtn.setToolTipText("Logout Securely");
-        logoutBtn.addActionListener(e -> {
-            if (UIHelper.confirm(this, "Logout", "Are you sure you want to log out securely?")) {
-                dispose();
-                new LoginWindow().setVisible(true);
+        // Sync button — self-painting rounded button
+        JButton syncNowBtn = new JButton("Sync Devices") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(isEnabled()
+                        ? (getModel().isRollover() ? UIHelper.ACCENT.darker() : UIHelper.ACCENT)
+                        : UIHelper.ACCENT.darker());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
             }
-        });
-        
-        userBox.add(userLbl);
-        userBox.add(userIconLbl);
-        userBox.add(logoutBtn);
-        DashboardPanel dashboard = new DashboardPanel();
-        
-        JButton syncNowBtn = UIHelper.makeButton("Sync Devices", UIHelper.ACCENT);
-        syncNowBtn.setIcon(new FlatSVGIcon("icons/sync.svg", 16, 16));
+        };
+        syncNowBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        syncNowBtn.setForeground(Color.WHITE);
+        syncNowBtn.setContentAreaFilled(false);
+        syncNowBtn.setFocusPainted(false);
+        syncNowBtn.setBorderPainted(false);
+        syncNowBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        syncNowBtn.setBorder(BorderFactory.createEmptyBorder(7, 14, 7, 14));
+        try {
+            FlatSVGIcon sIcon = new FlatSVGIcon("icons/sync.svg", 14, 14);
+            sIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            syncNowBtn.setIcon(sIcon);
+            syncNowBtn.setIconTextGap(7);
+            syncNowBtn.setHorizontalTextPosition(SwingConstants.RIGHT);
+        } catch (Exception ignored) {
+        }
         syncNowBtn.setToolTipText("Sync all biometric devices now");
+
+        dashboard = new DashboardPanel();
+        panelCache.put("Dashboard", dashboard);
+
         syncNowBtn.addActionListener(e -> {
             syncNowBtn.setEnabled(false);
             syncNowBtn.setText("Syncing...");
             SyncService.forceUpdateToday(() -> {
                 syncNowBtn.setEnabled(true);
                 syncNowBtn.setText("Sync Devices");
-                dashboard.publicLoadTable();
-                JOptionPane.showMessageDialog(this, "Manual synchronization completed successfully.");
+                if (dashboard != null)
+                    dashboard.publicLoadTable();
+                UIHelper.showSuccess(this, "Synchronization completed successfully.");
             });
         });
-        header.add(syncNowBtn, "gapleft 16");
-        header.add(userBox, "gapleft 16");
+        rightPanel.add(syncNowBtn);
 
+        // Separator
+        JSeparator sep = new JSeparator(SwingConstants.VERTICAL);
+        sep.setPreferredSize(new Dimension(1, 24));
+        sep.setForeground(UIHelper.BORDER);
+        rightPanel.add(sep, "h 24!");
+
+        // User icon + name
+        FlatSVGIcon uIcon = new FlatSVGIcon("icons/user.svg", 18, 18);
+        uIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> UIHelper.PRIMARY));
+        JLabel userIconLbl = new JLabel(uIcon);
+
+        JLabel userLbl = new JLabel(username);
+        userLbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        userLbl.setForeground(UIHelper.PRIMARY);
+
+        JPanel userBox = new JPanel(new MigLayout("ins 0, gap 6", "[] []", "[]"));
+        userBox.setOpaque(false);
+        userBox.add(userIconLbl);
+        userBox.add(userLbl);
+        rightPanel.add(userBox);
+
+        // Logout button
+        FlatSVGIcon lIcon = new FlatSVGIcon("icons/logout.svg", 18, 18);
+        lIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> UIHelper.DANGER));
+        JButton logoutBtn = new JButton(lIcon);
+        logoutBtn.setContentAreaFilled(false);
+        logoutBtn.setBorderPainted(false);
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        logoutBtn.setToolTipText("Logout Securely");
+        logoutBtn.addActionListener(e -> {
+            if (UIHelper.confirm(this, "Logout", "Are you sure you want to log out?")) {
+                dispose();
+                new LoginWindow().setVisible(true);
+            }
+        });
+        rightPanel.add(logoutBtn);
+
+        header.add(rightPanel, "right");
+
+        // Add a component listener to hide clock/user info on small screens
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                boolean wide = getWidth() > 1150;
+                clockLbl.setVisible(wide);
+                userBox.setVisible(getWidth() > 950);
+            }
+        });
+
+        // Clock ticker
         Timer t = new Timer(1000, e -> {
             clockLbl.setText(java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("EEE, dd MMM yyyy  HH:mm:ss")));
+                    .format(java.time.format.DateTimeFormatter.ofPattern("EEE, dd MMM  HH:mm:ss")));
         });
+        t.setInitialDelay(0);
         t.start();
 
         mainArea.add(header, "growx");
@@ -265,35 +344,13 @@ public class MainApp extends JFrame {
         statusLbl.setForeground(UIHelper.TEXT_LIGHT);
         footer.add(statusLbl, "growx");
 
-        com.bhspl.service.SyncService.setStatusListener(msg -> SwingUtilities.invokeLater(() -> statusLbl.setText("Sync: " + msg)));
+        com.bhspl.service.SyncService
+                .setStatusListener(msg -> SwingUtilities.invokeLater(() -> statusLbl.setText("Sync: " + msg)));
 
         contentPanel.add(dashboard, "Dashboard");
-        contentPanel.add(new EmployeePanel(), "Employee Master");
-        contentPanel.add(new AttendancePanel(), "Attendance");
-        contentPanel.add(new RawPunchLogPanel(), "Raw Punch Log");
-        contentPanel.add(new LeavePanel(), "Leave Manager");
-        contentPanel.add(new ODRequestPanel(), "OD Requests");
-        contentPanel.add(new LeavePolicyPanel(), "Leave Policy");
-        contentPanel.add(new LeaveBalancePanel(), "Leave Balance");
-        contentPanel.add(new HolidayPanel(), "Holidays");
-        
-        contentPanel.add(new DevicePanel(), "Device Manager");
-        contentPanel.add(new DepartmentPanel(), "Departments");
-        contentPanel.add(new DesignationPanel(), "Designations");
-        contentPanel.add(new ShiftPanel(), "Shifts");
-        contentPanel.add(new WeeklyOffPanel(), "Weekly Off");
-        
-        contentPanel.add(new UserManagementPanel(), "User Management");
-        contentPanel.add(new BackupPanel(), "DB Backup");
-        contentPanel.add(new AboutPanel(), "About");
+        // Panels are loaded lazily when their navigation button is clicked
 
-        reportsPanel = new ReportsPanel(false);
-        contentPanel.add(reportsPanel, "Reports");
-        if (!"Operator".equals(role)) {
-            contentPanel.add(new SettingsPanel(), "Settings");
-        }
-
-        mainArea.add(contentPanel, "grow, push");
+        mainArea.add(contentPanel, "grow, push, wmin 0");
         mainArea.add(footer, "growx");
         add(mainArea, "grow, push");
 
@@ -301,14 +358,75 @@ public class MainApp extends JFrame {
             firstBtn.setSelected(true);
     }
 
-    private JComponent createSeparator(String title) {
-        JPanel p = new JPanel(new MigLayout("ins 15 15 5 15, fillx", "[grow] [] [grow]", "[]"));
-        p.setOpaque(false);
-        JLabel l = new JLabel("— " + title + " —");
-        l.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        l.setForeground(new Color(0x64748B));
-        p.add(l, "center");
-        return p;
+    private void ensurePanelLoaded(String name) {
+        if (panelCache.containsKey(name))
+            return;
+
+        JPanel panel = null;
+        switch (name) {
+            case "Employee Master":
+                panel = new EmployeePanel();
+                break;
+            case "Attendance":
+                panel = new AttendancePanel();
+                break;
+            case "Raw Punch Log":
+                panel = new RawPunchLogPanel();
+                break;
+            case "Leave Manager":
+                panel = new LeavePanel();
+                break;
+            case "OD Requests":
+                panel = new ODRequestPanel();
+                break;
+            case "Leave Policy":
+                panel = new LeavePolicyPanel();
+                break;
+            case "Leave Balance":
+                panel = new LeaveBalancePanel();
+                break;
+            case "Holidays":
+                panel = new HolidayPanel();
+                break;
+            case "Device Manager":
+                panel = new DevicePanel();
+                break;
+            case "Departments":
+                panel = new DepartmentPanel();
+                break;
+            case "Designations":
+                panel = new DesignationPanel();
+                break;
+            case "Shifts":
+                panel = new ShiftPanel();
+                break;
+            case "Weekly Off":
+                panel = new WeeklyOffPanel();
+                break;
+            case "User Management":
+                panel = new UserManagementPanel();
+                break;
+            case "DB Backup":
+                panel = new BackupPanel();
+                break;
+            case "About":
+                panel = new AboutPanel();
+                break;
+            case "Settings":
+                panel = new SettingsPanel();
+                break;
+            case "Reports":
+                reportsPanel = new ReportsPanel(false);
+                panel = reportsPanel;
+                break;
+        }
+
+        if (panel != null) {
+            panelCache.put(name, panel);
+            contentPanel.add(panel, name);
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        }
     }
 
     private JToggleButton createNavButton(String name, String iconPath) {
@@ -328,12 +446,11 @@ public class MainApp extends JFrame {
             btn.setBackground(selected ? UIHelper.SIDEBAR_SEL : UIHelper.SIDEBAR_BG);
             btn.setForeground(selected ? UIHelper.SIDEBAR_TEXT_SEL : UIHelper.TEXT_LIGHT);
             btn.setFont(selected ? new Font("Segoe UI", Font.BOLD, 16) : new Font("Segoe UI", Font.PLAIN, 16));
-            
+
             if (selected) {
                 btn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 5, 0, 0, UIHelper.PRIMARY),
-                    new EmptyBorder(14, 19, 14, 10)
-                ));
+                        BorderFactory.createMatteBorder(0, 5, 0, 0, UIHelper.PRIMARY),
+                        new EmptyBorder(14, 19, 14, 10)));
             } else {
                 btn.setBorder(new EmptyBorder(14, 24, 14, 10));
             }
@@ -378,17 +495,16 @@ public class MainApp extends JFrame {
             btn.setBackground(selected ? UIHelper.SIDEBAR_SEL : UIHelper.SIDEBAR_BG);
             btn.setForeground(selected ? UIHelper.SIDEBAR_TEXT_SEL : UIHelper.TEXT_LIGHT);
             btn.setFont(selected ? new Font("Segoe UI", Font.BOLD, 14) : new Font("Segoe UI", Font.PLAIN, 14));
-            
+
             if (selected) {
                 btn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 4, 0, 0, UIHelper.PRIMARY),
-                    new EmptyBorder(10, 41, 10, 10)
-                ));
+                        BorderFactory.createMatteBorder(0, 4, 0, 0, UIHelper.PRIMARY),
+                        new EmptyBorder(10, 41, 10, 10)));
             } else {
                 btn.setBorder(new EmptyBorder(10, 45, 10, 10));
             }
         });
-        
+
         return btn;
     }
 

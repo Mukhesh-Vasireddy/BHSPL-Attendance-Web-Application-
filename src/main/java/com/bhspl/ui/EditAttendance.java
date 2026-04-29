@@ -139,11 +139,11 @@ public class EditAttendance extends JDialog {
             db.execute("UPDATE attendance SET in_time=?, out_time=?, work_hours=?, overtime=?, late_mins=?, early_mins=?, status=?, remarks=? WHERE id=?",
                 inDt, outDt, m.workHours, m.overtime, m.lateMins, m.earlyMins, statusCombo.getSelectedItem().toString(), remarksField.getText().trim(), recId);
             
-            JOptionPane.showMessageDialog(this, "Attendance record updated.");
+            UIHelper.showSuccess(this, "Attendance record updated.");
             if (callback != null) callback.run();
             dispose();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            UIHelper.showError(this, "Error: " + e.getMessage());
         }
     }
 

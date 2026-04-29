@@ -118,7 +118,7 @@ public class DeviceForm extends JDialog {
         String name = nameField.getText().trim();
         String ip = ipField.getText().trim();
         if (name.isEmpty() || ip.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Name and IP are required.");
+            UIHelper.showWarning(this, "Name and IP are required.");
             return;
         }
         try {
@@ -138,7 +138,7 @@ public class DeviceForm extends JDialog {
                 callback.run();
             dispose();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+            UIHelper.showError(this, "Error: " + e.getMessage());
         }
     }
 }

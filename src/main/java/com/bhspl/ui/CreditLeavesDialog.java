@@ -54,8 +54,14 @@ public class CreditLeavesDialog extends JDialog {
         } catch (Exception ignored) {}
         header.add(title, BorderLayout.WEST);
 
-        JButton closeBtn = new JButton("\u00D7");
-        closeBtn.setFont(new Font("Segoe UI", Font.PLAIN, 28));
+        JButton closeBtn = new JButton();
+        try {
+            com.formdev.flatlaf.extras.FlatSVGIcon closeIcon = new com.formdev.flatlaf.extras.FlatSVGIcon("icons/x.svg", 18, 18);
+            closeIcon.setColorFilter(new com.formdev.flatlaf.extras.FlatSVGIcon.ColorFilter(c -> Color.WHITE));
+            closeBtn.setIcon(closeIcon);
+        } catch (Exception ignored) {
+            closeBtn.setText("X");
+        }
         closeBtn.setForeground(Color.WHITE);
         closeBtn.setContentAreaFilled(false);
         closeBtn.setBorderPainted(false);

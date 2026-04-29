@@ -127,11 +127,11 @@ public class ImportEditDialog extends JDialog {
                     eid, enm, f.get("dept").getText().trim(), f.get("desig").getText().trim(), f.get("phone").getText().trim(), u.get("user_id"));
                 count++;
             }
-            JOptionPane.showMessageDialog(this, count + " employees imported successfully.");
+            UIHelper.showSuccess(this, count + " employees imported successfully.");
             if (finalCallback != null) finalCallback.run();
             dispose();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error importing users: " + e.getMessage());
+            UIHelper.showError(this, "Error importing users: " + e.getMessage());
         }
     }
 }

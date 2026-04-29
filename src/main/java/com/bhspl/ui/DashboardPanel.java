@@ -36,7 +36,7 @@ public class DashboardPanel extends JPanel {
 
     private void buildUI() {
         // Stats Row
-        JPanel statsRow = new JPanel(new MigLayout("ins 0, gap 16", "[grow]16[grow]16[grow]16[grow]", "[]"));
+        JPanel statsRow = new JPanel(new MigLayout("ins 0, gap 16, wrap 4", "[grow, fill]"));
         statsRow.setOpaque(false);
 
         JPanel card1 = statCard("...", "Today Present", UIHelper.SUCCESS, new Color(0xF0FDF4), "present.svg");
@@ -51,6 +51,23 @@ public class DashboardPanel extends JPanel {
 
         add(statsRow, "growx");
 
+        // Responsive stats row
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                int w = getWidth();
+                String layout;
+                if (w < 700) layout = "ins 0, gap 16, wrap 1";
+                else if (w < 1100) layout = "ins 0, gap 16, wrap 2";
+                else layout = "ins 0, gap 16, wrap 4";
+                
+                if (statsRow.getLayout() instanceof MigLayout) {
+                    statsRow.setLayout(new MigLayout(layout, "[grow, fill]"));
+                    statsRow.revalidate();
+                }
+            }
+        });
+
         // Content Row
         JPanel contentRow = new JPanel(new MigLayout("ins 0, wrap", "[grow]", "[grow]"));
         contentRow.setOpaque(false);
@@ -61,11 +78,14 @@ public class DashboardPanel extends JPanel {
     private void refreshCards(JPanel c1, JPanel c2, JPanel c3, JPanel c4) {
         // Find existing cards if null (for timer refresh)
         if (c1 == null) {
-            if (getComponentCount() == 0) return;
+            if (getComponentCount() == 0)
+                return;
             Component comp0 = getComponent(0);
-            if (!(comp0 instanceof JPanel)) return;
+            if (!(comp0 instanceof JPanel))
+                return;
             JPanel statsRow = (JPanel) comp0;
-            if (statsRow.getComponentCount() < 4) return;
+            if (statsRow.getComponentCount() < 4)
+                return;
             c1 = (JPanel) statsRow.getComponent(0);
             c2 = (JPanel) statsRow.getComponent(1);
             c3 = (JPanel) statsRow.getComponent(2);
@@ -98,7 +118,8 @@ public class DashboardPanel extends JPanel {
 
                     // 4. On Leave Today
                     r = db.fetchOne(
-                            "SELECT COUNT(*) AS c FROM leaves WHERE status='Approved' AND ? BETWEEN from_date AND to_date", today);
+                            "SELECT COUNT(*) AS c FROM leaves WHERE status='Approved' AND ? BETWEEN from_date AND to_date",
+                            today);
                     s[3] = r != null ? ((Number) r.get("c")).intValue() : 0;
                 } catch (SQLException ignored) {
                 }
@@ -121,17 +142,20 @@ public class DashboardPanel extends JPanel {
 
     private void updateCard(JPanel card, String val) {
         JLabel lbl = findLabel(card, 28);
-        if (lbl != null) lbl.setText(val);
+        if (lbl != null)
+            lbl.setText(val);
     }
 
     private JLabel findLabel(Container container, int minSize) {
         for (Component c : container.getComponents()) {
             if (c instanceof JLabel) {
                 JLabel l = (JLabel) c;
-                if (l.getFont().getSize() >= minSize) return l;
+                if (l.getFont().getSize() >= minSize)
+                    return l;
             } else if (c instanceof Container) {
                 JLabel l = findLabel((Container) c, minSize);
-                if (l != null) return l;
+                if (l != null)
+                    return l;
             }
         }
         return null;
@@ -142,7 +166,7 @@ public class DashboardPanel extends JPanel {
         card.setLayout(new MigLayout("ins 24, gap 15", "[grow][]", "[] 4 []"));
         card.setBackground(bgColor);
         card.setBorderColor(new Color(0xE2E8F0));
-        
+
         // Add accent border on the left
         card.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, accentColor));
 
@@ -184,7 +208,7 @@ public class DashboardPanel extends JPanel {
         title.setForeground(UIHelper.TEXT_DARK);
         header.add(title, "growx");
 
-        JButton refreshBtn = UIHelper.makeButton("Refresh Data", new Color(0x334155));
+        JButton refreshBtn = UIHelper.makeButton("Refresh Data", new Color(0x334155), "refresh.svg");
         refreshBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         refreshBtn.addActionListener(e -> {
             refreshBtn.setEnabled(false);
@@ -201,6 +225,11 @@ public class DashboardPanel extends JPanel {
 
         String[] cols = { "Emp ID", "Name", "In Time", "Punches", "Status" };
         tablePanel = new UIHelper.StyledTablePanel(cols);
+        // Emp ID, Name, In Time, Punches, Status
+        int[] widths = { 80, 200, 90, 80, 110 };
+        for (int i = 0; i < widths.length; i++) {
+            tablePanel.getTable().getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        }
 
         panel.add(tablePanel, "grow, push");
         return panel;
@@ -218,30 +247,37 @@ public class DashboardPanel extends JPanel {
                 String today = LocalDate.now().toString();
                 return db.fetchAll(
                         "SELECT e.emp_id, e.emp_name, DATE_FORMAT(MIN(a.in_time),'%H:%i') AS in_time, " +
-                        "COALESCE(" +
-                        "  (CASE " +
-                        "    WHEN SUM(CASE WHEN a.status='Half Day' THEN 1 ELSE 0 END) > 0 THEN 'Half Day' " +
-                        "    WHEN SUM(CASE WHEN a.status='Late' THEN 1 ELSE 0 END) > 0 THEN 'Late' " +
-                        "    WHEN SUM(CASE WHEN a.status='OD' OR a.status='On Duty' THEN 1 ELSE 0 END) > 0 THEN 'On Duty' " +
-                        "    WHEN SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END) > 0 THEN 'Present' " +
-                        "    WHEN MAX(a.status) IS NOT NULL THEN MAX(a.status) " +
-                        "  END), " +
-                        "  (SELECT UPPER(leave_type) FROM leaves l WHERE l.emp_id = e.emp_id AND l.status='Approved' AND ? BETWEEN l.from_date AND l.to_date LIMIT 1), " +
-                        "  (SELECT UPPER(holiday_name) FROM holidays h WHERE h.holiday_date = ? LIMIT 1), " +
-                        "  (SELECT UPPER(CASE WHEN DAYNAME(?) = off_day1 THEN off_day1 ELSE off_day2 END) FROM weekly_offs w " +
-                        "   WHERE w.emp_id = e.emp_id AND (? >= w.effective_from) AND (w.effective_to IS NULL OR ? <= w.effective_to) " +
-                        "   AND (DAYNAME(?) = w.off_day1 OR DAYNAME(?) = w.off_day2) LIMIT 1), " +
-                        "  (CASE WHEN DAYNAME(?) = s.weekly_off1 THEN UPPER(s.weekly_off1) WHEN DAYNAME(?) = s.weekly_off2 THEN UPPER(s.weekly_off2) END), " +
-                        "  'Absent' " +
-                        ") as status, " +
-                        "(SELECT COUNT(*) FROM raw_logs rl WHERE (rl.emp_id = e.emp_id OR rl.emp_id = e.device_enroll_id) AND rl.punch_time LIKE ?) AS punches " +
-                        "FROM employees e " +
-                        "LEFT JOIN shifts s ON e.shift = s.shift_name " +
-                        "LEFT JOIN attendance a ON e.emp_id = a.emp_id AND a.punch_date = ? " +
-                        "WHERE e.status = 'Active' " +
-                        "GROUP BY e.emp_id, e.emp_name " +
-                        "ORDER BY (MIN(a.in_time) IS NULL) ASC, MIN(a.in_time) DESC, e.emp_name ASC LIMIT 100", 
-                        today, today, today, today, today, today, today, today, today, today + "%", today);
+                                "COALESCE(p1.cnt, p2.cnt, 0) as punches, " +
+                                "COALESCE(" +
+                                "  (CASE " +
+                                "    WHEN SUM(CASE WHEN a.status='Half Day' THEN 1 ELSE 0 END) > 0 THEN 'Half Day' " +
+                                "    WHEN SUM(CASE WHEN a.status='Late' THEN 1 ELSE 0 END) > 0 THEN 'Late' " +
+                                "    WHEN SUM(CASE WHEN a.status='OD' OR a.status='On Duty' THEN 1 ELSE 0 END) > 0 THEN 'On Duty' "
+                                +
+                                "    WHEN SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END) > 0 THEN 'Present' " +
+                                "    WHEN MAX(a.status) IS NOT NULL THEN MAX(a.status) " +
+                                "  END), " +
+                                "  (SELECT UPPER(leave_type) FROM leaves l WHERE l.emp_id = e.emp_id AND l.status='Approved' AND ? BETWEEN l.from_date AND l.to_date LIMIT 1), "
+                                +
+                                "  (SELECT UPPER(holiday_name) FROM holidays h WHERE h.holiday_date = ? LIMIT 1), " +
+                                "  (SELECT UPPER(CASE WHEN DAYNAME(?) = off_day1 THEN off_day1 ELSE off_day2 END) FROM weekly_offs w "
+                                +
+                                "   WHERE w.emp_id = e.emp_id AND (? >= w.effective_from) AND (w.effective_to IS NULL OR ? <= w.effective_to) "
+                                +
+                                "   AND (DAYNAME(?) = w.off_day1 OR DAYNAME(?) = w.off_day2) LIMIT 1), " +
+                                "  (CASE WHEN DAYNAME(?) = s.weekly_off1 THEN UPPER(s.weekly_off1) WHEN DAYNAME(?) = s.weekly_off2 THEN UPPER(s.weekly_off2) END), "
+                                +
+                                "  'Absent' " +
+                                ") as status " +
+                                "FROM employees e " +
+                                "LEFT JOIN shifts s ON e.shift = s.shift_name " +
+                                "LEFT JOIN attendance a ON e.emp_id = a.emp_id AND a.punch_date = ? " +
+                                "LEFT JOIN (SELECT emp_id, COUNT(*) as cnt FROM raw_logs WHERE punch_time >= CURDATE() GROUP BY emp_id) p1 ON e.emp_id = p1.emp_id " +
+                                "LEFT JOIN (SELECT emp_id, COUNT(*) as cnt FROM raw_logs WHERE punch_time >= CURDATE() GROUP BY emp_id) p2 ON e.device_enroll_id = p2.emp_id " +
+                                "WHERE e.status = 'Active' " +
+                                "GROUP BY e.emp_id, e.emp_name, p1.cnt, p2.cnt " +
+                                "ORDER BY (MIN(a.in_time) IS NULL) ASC, MIN(a.in_time) DESC, e.emp_name ASC LIMIT 100",
+                        today, today, today, today, today, today, today, today, today, today);
             }
 
             @Override
@@ -249,10 +285,10 @@ public class DashboardPanel extends JPanel {
                 try {
                     for (Map<String, Object> r : get()) {
                         tablePanel.addRow(new Object[] {
-                            r.get("emp_id"), r.get("emp_name"),
-                            (r.get("in_time") != null ? r.get("in_time") : "—"),
-                            r.get("punches"),
-                            r.get("status")
+                                r.get("emp_id"), r.get("emp_name"),
+                                (r.get("in_time") != null ? r.get("in_time") : "—"),
+                                r.get("punches"),
+                                r.get("status")
                         });
                     }
                 } catch (Exception ignored) {

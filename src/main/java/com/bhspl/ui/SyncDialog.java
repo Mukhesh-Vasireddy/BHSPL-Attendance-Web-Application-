@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Main sync dialog for fetching logs from devices and processing them.
@@ -28,9 +27,7 @@ public class SyncDialog extends JDialog {
     private JButton syncBtn;
     
     private Map<String, Map<String, Object>> deviceMap = new HashMap<>();
-    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
     private boolean running = false;
-    private boolean alive = true;
 
     public SyncDialog(JFrame parent) {
         super(parent, "Sync Device Logs", true);
