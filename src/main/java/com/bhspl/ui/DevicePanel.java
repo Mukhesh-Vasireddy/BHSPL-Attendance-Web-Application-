@@ -16,7 +16,7 @@ public class DevicePanel extends JPanel {
     private UIHelper.StyledTablePanel tablePanel;
 
     private static final String[] COLUMNS = {
-            "ID", "Device Name", "IP Address", "Port", "Location", "Status", "Last Sync", "Sync Status"
+        "ID", "Device Name", "IP Address", "Port", "Location", "Status", "Last Sync", "Sync Status"
     };
 
     public DevicePanel() {
@@ -24,7 +24,7 @@ public class DevicePanel extends JPanel {
         setLayout(new MigLayout("ins 24, wrap, gap 0, fill", "[grow]", "[] 16 [grow] 8 []"));
         buildUI();
         loadData();
-
+        
         // Auto-refresh every 10 seconds for real-time status updates
         Timer autoRefresh = new Timer(10000, e -> loadData());
         autoRefresh.start();
@@ -38,20 +38,20 @@ public class DevicePanel extends JPanel {
         JLabel title = new JLabel("Device Management");
         title.setFont(UIHelper.FNT_TITLE);
         title.setForeground(UIHelper.PRIMARY);
-
+        
         // Responsive button panel
         JPanel btnPanel = new JPanel(new MigLayout("ins 0, gap 6, wrap", "[] [] [] [] [] [] [] []"));
         btnPanel.setOpaque(false);
         btnPanel.setOpaque(false);
 
-        JButton addBtn = createCompactButton("Add Device", UIHelper.SUCCESS, "plus.svg");
-        JButton editBtn = createCompactButton("Edit Device", UIHelper.PRIMARY, "edit.svg");
-        JButton deleteBtn = createCompactButton("Delete Device", UIHelper.DANGER, "trash.svg");
-        JButton testBtn = createCompactButton("Test Connect", new Color(0xea580c), "check.svg");
-        JButton syncBtn = createCompactButton("Sync Logs", new Color(0x0f766e), "sync.svg");
-        JButton importBtn = createCompactButton("Import Users", UIHelper.PRIMARY, "employees.svg");
-        JButton diagBtn = createCompactButton("Diagnose", new Color(0x7e22ce), "search.svg");
-        JButton refreshBtn = createCompactButton("Refresh", new Color(0x475569), "refresh.svg");
+        JButton addBtn     = createCompactButton("Add Device",    UIHelper.SUCCESS,          "plus.svg");
+        JButton editBtn    = createCompactButton("Edit Device",   UIHelper.PRIMARY,          "edit.svg");
+        JButton deleteBtn  = createCompactButton("Delete Device", UIHelper.DANGER,           "trash.svg");
+        JButton testBtn    = createCompactButton("Test Connect",  new Color(0xea580c),       "check.svg");
+        JButton syncBtn    = createCompactButton("Sync Logs",     new Color(0x0f766e),       "sync.svg");
+        JButton importBtn  = createCompactButton("Import Users",  UIHelper.PRIMARY,          "employees.svg");
+        JButton diagBtn    = createCompactButton("Diagnose",      new Color(0x7e22ce),       "search.svg");
+        JButton refreshBtn = createCompactButton("Refresh",       new Color(0x475569),       "refresh.svg");
 
         addBtn.addActionListener(e -> openDeviceDialog(null));
         editBtn.addActionListener(e -> {
@@ -69,16 +69,16 @@ public class DevicePanel extends JPanel {
         diagBtn.addActionListener(e -> diagnoseSelected());
         refreshBtn.addActionListener(e -> loadData());
 
-        btnPanel.add(addBtn, "shrink 0");
-        btnPanel.add(editBtn, "shrink 0");
-        btnPanel.add(deleteBtn, "shrink 0");
-        btnPanel.add(testBtn, "shrink 0");
-        btnPanel.add(syncBtn, "shrink 0");
-        btnPanel.add(importBtn, "shrink 0");
-        btnPanel.add(diagBtn, "shrink 0");
+        btnPanel.add(addBtn,     "shrink 0");
+        btnPanel.add(editBtn,    "shrink 0");
+        btnPanel.add(deleteBtn,  "shrink 0");
+        btnPanel.add(testBtn,    "shrink 0");
+        btnPanel.add(syncBtn,    "shrink 0");
+        btnPanel.add(importBtn,  "shrink 0");
+        btnPanel.add(diagBtn,    "shrink 0");
         btnPanel.add(refreshBtn, "shrink 0");
 
-        toolbar.add(title, "left, growx, pushx");
+        toolbar.add(title,    "left, growx, pushx");
         toolbar.add(btnPanel, "right");
         add(toolbar, "growx");
 
@@ -89,8 +89,7 @@ public class DevicePanel extends JPanel {
                 int w = getWidth();
                 if (w < 1000) {
                     toolbar.setLayout(new MigLayout("ins 0, gap 10, wrap", "[grow, fill]"));
-                    btnPanel.setLayout(new MigLayout("ins 0, gap 6, wrap 4",
-                            "[grow, fill] [grow, fill] [grow, fill] [grow, fill]"));
+                    btnPanel.setLayout(new MigLayout("ins 0, gap 6, wrap 4", "[grow, fill] [grow, fill] [grow, fill] [grow, fill]"));
                 } else {
                     toolbar.setLayout(new MigLayout("ins 0, gap 0, fillx", "[grow][right]"));
                     btnPanel.setLayout(new MigLayout("ins 0, gap 6", "[] [] [] [] [] [] [] []"));
@@ -127,35 +126,33 @@ public class DevicePanel extends JPanel {
             @Override
             protected List<Map<String, Object>> doInBackground() throws Exception {
                 return DatabaseManager.getInstance().fetchAll(
-                        "SELECT device_id, device_name, ip_address, port, location, status, last_sync, last_error FROM devices ORDER BY device_id");
+                    "SELECT device_id, device_name, ip_address, port, location, status, last_sync, last_error FROM devices ORDER BY device_id");
             }
-
             @Override
             protected void done() {
                 try {
                     for (Map<String, Object> r : get()) {
                         String lastErr = (String) r.get("last_error");
                         String syncStatus = (lastErr == null) ? "OK" : "Error: " + lastErr;
-
-                        tablePanel.addRow(new Object[] {
-                                r.get("device_id"), r.get("device_name"), r.get("ip_address"),
-                                r.get("port"), r.get("location"), r.get("status"), r.get("last_sync"),
-                                syncStatus
+                        
+                        tablePanel.addRow(new Object[]{
+                            r.get("device_id"), r.get("device_name"), r.get("ip_address"),
+                            r.get("port"), r.get("location"), r.get("status"), r.get("last_sync"),
+                            syncStatus
                         });
                     }
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         };
         worker.execute();
     }
 
     private void openDeviceDialog(Integer deviceId) {
-        JDialog dlg = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this),
-                (deviceId == null ? "Register New Device" : "Edit Device Settings"), true);
+        JDialog dlg = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), 
+            (deviceId == null ? "Register New Device" : "Edit Device Settings"), true);
         dlg.setSize(450, 460);
         UIHelper.centerWindow(dlg, 450, 460);
-
+        
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(Color.WHITE);
 
@@ -163,14 +160,13 @@ public class DevicePanel extends JPanel {
         JPanel header = new JPanel(new MigLayout("ins 0 20 0 20, fill", "[] 15 [grow]", "[]"));
         header.setBackground(UIHelper.PRIMARY);
         header.setPreferredSize(new Dimension(0, 60));
-
+        
         try {
             FlatSVGIcon icon = new FlatSVGIcon("icons/devices.svg", 24, 24);
             icon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
             header.add(new JLabel(icon), "aligny center");
-        } catch (Exception ignored) {
-        }
-
+        } catch (Exception ignored) {}
+        
         JLabel titleLbl = new JLabel(deviceId == null ? "Add New Device" : "Update Device Settings");
         titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
         titleLbl.setForeground(Color.WHITE);
@@ -181,15 +177,14 @@ public class DevicePanel extends JPanel {
         p.setOpaque(false);
 
         JTextField name = new JTextField(14);
-        JTextField ip = new JTextField(14);
+        JTextField ip   = new JTextField(14);
         JTextField port = new JTextField("4370", 14);
-        JTextField loc = new JTextField(14);
-        JTextField pwd = new JTextField("0", 14);
+        JTextField loc  = new JTextField(14);
+        JTextField pwd  = new JTextField("0", 14);
 
         if (deviceId != null) {
             try {
-                Map<String, Object> data = DatabaseManager.getInstance()
-                        .fetchOne("SELECT * FROM devices WHERE device_id=?", deviceId);
+                Map<String, Object> data = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?", deviceId);
                 if (data != null) {
                     name.setText(DatabaseManager.str(data, "device_name"));
                     ip.setText(DatabaseManager.str(data, "ip_address"));
@@ -203,45 +198,40 @@ public class DevicePanel extends JPanel {
             }
         }
 
-        p.add(new JLabel("Device Name:"));
-        p.add(name, "growx");
-        p.add(new JLabel("IP Address:"));
-        p.add(ip, "growx");
-        p.add(new JLabel("Port:"));
-        p.add(port, "growx");
-        p.add(new JLabel("Location:"));
-        p.add(loc, "growx");
-        p.add(new JLabel("Password:"));
-        p.add(pwd, "growx");
+        p.add(new JLabel("Device Name:")); p.add(name, "growx");
+        p.add(new JLabel("IP Address:"));  p.add(ip,   "growx");
+        p.add(new JLabel("Port:"));        p.add(port, "growx");
+        p.add(new JLabel("Location:"));    p.add(loc,  "growx");
+        p.add(new JLabel("Password:"));    p.add(pwd,  "growx");
 
-        JButton save = UIHelper.makeButton(deviceId == null ? "Save Device" : "Update Device",
-                UIHelper.SUCCESS, deviceId == null ? "plus.svg" : "check.svg");
+        JButton save = UIHelper.makeButton(deviceId == null ? "Save Device" : "Update Device", 
+            UIHelper.SUCCESS, deviceId == null ? "plus.svg" : "check.svg");
         save.addActionListener(e -> {
             try {
                 int portNum = Integer.parseInt(port.getText().trim());
-                int pwdVal = Integer.parseInt(pwd.getText().trim());
-
+                int pwdVal  = Integer.parseInt(pwd.getText().trim());
+                
                 if (deviceId == null) {
                     DatabaseManager.getInstance().execute(
-                            "INSERT INTO devices (device_name, ip_address, port, location, comm_password) VALUES (?,?,?,?,?)",
-                            name.getText().trim(), ip.getText().trim(), portNum, loc.getText().trim(), pwdVal);
+                        "INSERT INTO devices (device_name, ip_address, port, location, comm_password) VALUES (?,?,?,?,?)",
+                        name.getText().trim(), ip.getText().trim(), portNum, loc.getText().trim(), pwdVal
+                    );
                 } else {
                     DatabaseManager.getInstance().execute(
-                            "UPDATE devices SET device_name=?, ip_address=?, port=?, location=?, comm_password=? WHERE device_id=?",
-                            name.getText().trim(), ip.getText().trim(), portNum, loc.getText().trim(), pwdVal,
-                            deviceId);
+                        "UPDATE devices SET device_name=?, ip_address=?, port=?, location=?, comm_password=? WHERE device_id=?",
+                        name.getText().trim(), ip.getText().trim(), portNum, loc.getText().trim(), pwdVal, deviceId
+                    );
                 }
                 dlg.dispose();
                 loadData();
-                UIHelper.showSuccess(this,
-                        "Device " + (deviceId == null ? "registered" : "updated") + " successfully.");
+                UIHelper.showSuccess(this, "Device " + (deviceId == null ? "registered" : "updated") + " successfully.");
             } catch (NumberFormatException nfe) {
                 UIHelper.showWarning(dlg, "Port and Password must be numeric.");
             } catch (Exception ex) {
                 UIHelper.showError(dlg, "Error: " + ex.getMessage());
             }
         });
-
+        
         JButton cancel = UIHelper.makeButton("Cancel", new Color(0x64748B), "x.svg");
         cancel.addActionListener(e -> dlg.dispose());
 
@@ -249,10 +239,10 @@ public class DevicePanel extends JPanel {
         footer.setOpaque(false);
         footer.add(cancel);
         footer.add(save);
-
+        
         root.add(p, BorderLayout.CENTER);
         root.add(footer, BorderLayout.SOUTH);
-
+        
         dlg.setContentPane(root);
         dlg.setVisible(true);
     }
@@ -265,15 +255,13 @@ public class DevicePanel extends JPanel {
         }
         int deviceId = (int) idVal;
         try {
-            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?",
-                    deviceId);
-            if (dev == null)
-                return;
-
+            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?", deviceId);
+            if (dev == null) return;
+            
             String ip = DatabaseManager.str(dev, "ip_address");
             int port = DatabaseManager.num(dev, "port");
             int pwd = DatabaseManager.num(dev, "comm_password");
-
+            
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
                 @Override
@@ -281,21 +269,17 @@ public class DevicePanel extends JPanel {
                     com.bhspl.util.ZkProtocol zk = new com.bhspl.util.ZkProtocol(ip, port, 5000);
                     zk.setPassword(pwd);
                     boolean res = zk.connect();
-                    if (res)
-                        zk.disconnect();
+                    if (res) zk.disconnect();
                     return res;
                 }
-
                 @Override
                 protected void done() {
                     setCursor(Cursor.getDefaultCursor());
                     try {
                         if (get()) {
-                            UIHelper.showSuccess(DevicePanel.this,
-                                    "Connection Successful!\nThe device is reachable and responding.");
+                            UIHelper.showSuccess(DevicePanel.this, "Connection Successful!\nThe device is reachable and responding.");
                         } else {
-                            UIHelper.showError(DevicePanel.this,
-                                    "Connection Failed.\nCheck the device IP, port, and network.");
+                            UIHelper.showError(DevicePanel.this, "Connection Failed.\nCheck the device IP, port, and network.");
                         }
                     } catch (Exception e) {
                         UIHelper.showError(DevicePanel.this, "Error: " + e.getMessage());
@@ -315,8 +299,7 @@ public class DevicePanel extends JPanel {
             return;
         }
         try {
-            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?",
-                    idVal);
+            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?", idVal);
             if (dev != null) {
                 new ImportUsersDialog((JFrame) SwingUtilities.getWindowAncestor(this), dev);
             }
@@ -332,8 +315,7 @@ public class DevicePanel extends JPanel {
             return;
         }
         try {
-            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?",
-                    idVal);
+            Map<String, Object> dev = DatabaseManager.getInstance().fetchOne("SELECT * FROM devices WHERE device_id=?", idVal);
             if (dev != null) {
                 String ip = DatabaseManager.str(dev, "ip_address");
                 int port = DatabaseManager.num(dev, "port");
@@ -347,11 +329,8 @@ public class DevicePanel extends JPanel {
 
     private void syncSelected() {
         Object idVal = tablePanel.getSelectedValue();
-        if (idVal == null) {
-            UIHelper.showInfo(this, "Please select a device first.");
-            return;
-        }
-
+        if (idVal == null) { UIHelper.showInfo(this, "Please select a device first."); return; }
+        
         int deviceId = (int) idVal;
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -361,7 +340,6 @@ public class DevicePanel extends JPanel {
                 com.bhspl.service.SyncService.syncDeviceById(deviceId);
                 return null;
             }
-
             @Override
             protected void done() {
                 setCursor(Cursor.getDefaultCursor());
@@ -379,15 +357,10 @@ public class DevicePanel extends JPanel {
 
     private void deleteSelected() {
         Object idVal = tablePanel.getSelectedValue();
-        if (idVal == null) {
-            UIHelper.showInfo(this, "Please select a device first.");
-            return;
-        }
-
+        if (idVal == null) { UIHelper.showInfo(this, "Please select a device first."); return; }
+        
         int id = (int) idVal;
-        if (!UIHelper.confirmYesNo(this, "Remove Device",
-                "Remove this device record?<br>This action cannot be undone."))
-            return;
+        if (!UIHelper.confirmYesNo(this, "Remove Device", "Remove this device record?<br>This action cannot be undone.")) return;
         try {
             DatabaseManager.getInstance().execute("DELETE FROM devices WHERE device_id=?", id);
             loadData();

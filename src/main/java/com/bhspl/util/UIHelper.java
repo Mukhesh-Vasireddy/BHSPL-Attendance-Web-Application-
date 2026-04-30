@@ -175,7 +175,7 @@ public class UIHelper {
                 : (parent != null ? SwingUtilities.getWindowAncestor(parent) : null);
         JDialog dlg = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setUndecorated(true);
-        dlg.setBackground(new Color(0, 0, 0, 0));
+        dlg.setBackground(new Color(0,0,0,0));
         dlg.setSize(420, 240);
         centerWindow(dlg, 420, 240);
 
@@ -258,7 +258,7 @@ public class UIHelper {
                 : (parent != null ? SwingUtilities.getWindowAncestor(parent) : null);
         JDialog dlg = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setUndecorated(true);
-        dlg.setBackground(new Color(0, 0, 0, 0));
+        dlg.setBackground(new Color(0,0,0,0));
         dlg.setSize(440, 260);
         centerWindow(dlg, 440, 260);
 
@@ -271,7 +271,7 @@ public class UIHelper {
         root.setBorder(BorderFactory.createLineBorder(new Color(0xE2E8F0), 1));
         JPanel header = new JPanel(new MigLayout("ins 0 20 0 20, fillx", "[shrink] 15 [grow]", "[52!]"));
         header.setBackground(accent);
-
+        
         try {
             FlatSVGIcon svgIcon = new FlatSVGIcon("icons/info.svg", 26, 26);
             svgIcon.setColorFilter(new FlatSVGIcon.ColorFilter(c -> Color.WHITE));
@@ -693,20 +693,5 @@ public class UIHelper {
             g2.dispose();
             super.paintComponent(g);
         }
-    }
-
-    /**
-     * Creates a standardized summary label for the bottom of panels.
-     * Indigo-900 style matching the modernization requirements.
-     */
-    public static JLabel createSummaryLabel(String initialText) {
-        JLabel label = new JLabel(initialText);
-        label.setOpaque(true);
-        label.setBackground(new Color(0x312E81)); // Indigo 900
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        label.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        label.setHorizontalAlignment(SwingConstants.LEFT);
-        return label;
     }
 }

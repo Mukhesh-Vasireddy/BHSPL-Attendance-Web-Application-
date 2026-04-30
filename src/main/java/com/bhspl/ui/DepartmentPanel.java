@@ -1,72 +1,143 @@
 package com.bhspl.ui;
- 
- import com.bhspl.db.DatabaseManager;
- import com.bhspl.util.UIHelper;
- import net.miginfocom.swing.MigLayout;
- 
- import javax.swing.*;
- import java.awt.*;
- import java.sql.SQLException;
- import java.util.List;
- import java.util.Map;
- 
- /**
-  * Premium Department Management Panel with standardized footer.
-  */
- public class DepartmentPanel extends JPanel {
- 
-     private UIHelper.StyledTablePanel tablePanel;
-     private JLabel statusLbl;
- 
-     private static final String[] COLUMNS = { "ID", "Dept Name", "Code", "Head", "Status", "Created" };
- 
-     public DepartmentPanel() {
-         setBackground(UIHelper.BG_MAIN);
-         setLayout(new MigLayout("ins 24, wrap, gap 0, fill", "[grow]", "[] 16 [grow] 8 []"));
-         buildUI();
-         loadData();
-     }
- 
-     private void buildUI() {
-         JPanel toolbar = new JPanel(new MigLayout("ins 0, gap 12", "[] push [] 8 [] 8 [] 8 []"));
-         toolbar.setOpaque(false);
-         JLabel title = new JLabel("Department Structure"); title.setFont(UIHelper.FNT_TITLE); title.setForeground(UIHelper.PRIMARY);
-         JButton addBtn = UIHelper.makeButton("Add Dept", UIHelper.SUCCESS, "plus.svg");
-         JButton editBtn = UIHelper.makeButton("Edit", UIHelper.PRIMARY, "edit.svg");
-         JButton deleteBtn = UIHelper.makeButton("Delete", UIHelper.DANGER, "trash.svg");
-         JButton refreshBtn = UIHelper.makeButton("Refresh", new Color(0x334155), "sync.svg");
-         addBtn.addActionListener(e -> openForm(-1));
-         editBtn.addActionListener(e -> { Object id = tablePanel.getSelectedValue(); if (id == null) { UIHelper.showInfo(this, "Select a department first."); return; } openForm((int) id); });
-         deleteBtn.addActionListener(e -> deleteSelected()); refreshBtn.addActionListener(e -> loadData());
-         toolbar.add(title); toolbar.add(addBtn, "right"); toolbar.add(editBtn); toolbar.add(deleteBtn); toolbar.add(refreshBtn);
-         add(toolbar, "growx");
- 
-         tablePanel = new UIHelper.StyledTablePanel(COLUMNS);
-         tablePanel.setBorder(UIHelper.createCardBorder());
-         tablePanel.getTable().getColumnModel().getColumn(0).setMaxWidth(60);
-         add(tablePanel, "grow, push, wmin 0");
- 
-         statusLbl = UIHelper.createSummaryLabel("Analyzing department hierarchy...");
-         add(statusLbl, "growx, gaptop 8");
-     }
- 
-     private void loadData() {
-         tablePanel.clearRows();
-         SwingWorker<List<Map<String, Object>>, Void> w = new SwingWorker<>() {
-             @Override protected List<Map<String, Object>> doInBackground() throws Exception { return DatabaseManager.getInstance().fetchAll("SELECT id, dept_name, dept_code, head_name, status, created_at FROM departments ORDER BY dept_name"); }
-             @Override protected void done() {
-                 try {
-                     List<Map<String, Object>> res = get(); int active = 0;
-                     for (Map<String, Object> r : res) {
-                         tablePanel.addRow(new Object[] { r.get("id"), r.get("dept_name"), r.get("dept_code"), r.get("head_name"), r.get("status"), r.get("created_at") });
-                         if ("Active".equalsIgnoreCase(String.valueOf(r.get("status")))) active++;
-                     }
-                     statusLbl.setText("Total Departments: " + res.size() + " | Active: " + active + " | Inactive: " + (res.size() - active));
-                 } catch (Exception ignored) {}
-             }
-         };
-         w.execute();
-     }
-     private void openForm(int id) { JDialog dlg = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), id < 0 ? "Create Department" : "Edit Department", true); dlg.setSize(400, 320); UIHelper.centerWindow(dlg, 400, 320); JPanel p = new JPanel(new MigLayout("ins 24, wrap, gap 12", "[][grow]", "[]")); p.setBackground(Color.WHITE); JTextField name = new JTextField(14), code = new JTextField(14), head = new JTextField(14); JComboBox<String> status = new JComboBox<>(new String[] { "Active", "Inactive" }); if (id >= 0) { try { Map<String, Object> r = DatabaseManager.getInstance().fetchOne("SELECT * FROM departments WHERE id=?", id); if (r != null) { name.setText((String) r.get("dept_name")); code.setText((String) r.get("dept_code")); head.setText((String) r.get("head_name")); status.setSelectedItem(r.get("status")); } } catch (Exception ignored) {} } p.add(new JLabel("Dept Name")); p.add(name, "growx"); p.add(new JLabel("Short Code")); p.add(code, "growx"); p.add(new JLabel("Head Person")); p.add(head, "growx"); p.add(new JLabel("Status")); p.add(status, "growx"); JButton save = UIHelper.makeButton("Save Department", UIHelper.SUCCESS); save.addActionListener(e -> { try { String n = name.getText().trim(); if (n.isEmpty()) { UIHelper.showWarning(dlg, "Name is required."); return; } if (id < 0) DatabaseManager.getInstance().execute("INSERT INTO departments (dept_name, dept_code, head_name, status) VALUES(?,?,?,?)", n, code.getText().trim(), head.getText().trim(), status.getSelectedItem()); else DatabaseManager.getInstance().execute("UPDATE departments SET dept_name=?, dept_code=?, head_name=?, status=? WHERE id=?", n, code.getText().trim(), head.getText().trim(), status.getSelectedItem(), id); dlg.dispose(); loadData(); } catch (SQLException ex) { UIHelper.showError(dlg, "Error: " + ex.getMessage()); } }); p.add(save, "skip, growx, gaptop 12"); dlg.setContentPane(p); dlg.setVisible(true); }
-     private void deleteSelected() { Object idVal = tablePanel.getSelectedValue(); if (idVal == null) { UIHelper.showInfo(this, "Select a department first."); return; } int id = (int) idVal; if (!UIHelper.confirm(this, "Confirm Delete", "Permanently delete this department record?")) return; try { DatabaseManager.getInstance().execute("DELETE FROM departments WHERE id=?", id); loadData(); } catch (SQLException ex) { UIHelper.showError(this, "Error: " + ex.getMessage()); } }
- }
+
+import com.bhspl.db.DatabaseManager;
+import com.bhspl.util.UIHelper;
+import net.miginfocom.swing.MigLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+public class DepartmentPanel extends JPanel {
+
+    private UIHelper.StyledTablePanel tablePanel;
+
+    private static final String[] COLUMNS = {"ID", "Dept Name", "Code", "Head", "Status", "Created"};
+
+    public DepartmentPanel() {
+        setBackground(UIHelper.BG_MAIN);
+        setLayout(new MigLayout("ins 24, wrap, gap 0", "[grow]", "[] 16 [grow]"));
+        buildUI();
+        loadData();
+    }
+
+    private void buildUI() {
+        // Toolbar
+        JPanel toolbar = new JPanel(new MigLayout("ins 0, gap 12", "[] push [] 8 [] 8 [] 8 []"));
+        toolbar.setOpaque(false);
+
+        JLabel title = new JLabel("Department Structure");
+        title.setFont(UIHelper.FNT_TITLE);
+        title.setForeground(UIHelper.PRIMARY);
+
+        JButton addBtn     = UIHelper.makeButton("Add Dept", UIHelper.SUCCESS, "plus.svg");
+        JButton editBtn    = UIHelper.makeButton("Edit", UIHelper.PRIMARY, "edit.svg");
+        JButton deleteBtn  = UIHelper.makeButton("Delete", UIHelper.DANGER, "trash.svg");
+        JButton refreshBtn = UIHelper.makeButton("Refresh", new Color(0x334155), "sync.svg");
+
+        addBtn.addActionListener(e -> openForm(-1));
+        editBtn.addActionListener(e -> {
+            Object id = tablePanel.getSelectedValue();
+            if (id == null) { UIHelper.showInfo(this, "Select a department first."); return; }
+            openForm((int) id);
+        });
+        deleteBtn.addActionListener(e -> deleteSelected());
+        refreshBtn.addActionListener(e -> loadData());
+
+        toolbar.add(title);
+        toolbar.add(addBtn, "right");
+        toolbar.add(editBtn);
+        toolbar.add(deleteBtn);
+        toolbar.add(refreshBtn);
+        add(toolbar, "growx");
+
+        // Table
+        tablePanel = new UIHelper.StyledTablePanel(COLUMNS);
+        tablePanel.setBorder(UIHelper.createCardBorder());
+        tablePanel.getTable().getColumnModel().getColumn(0).setMaxWidth(60);
+        add(tablePanel, "grow, push, wmin 0");
+    }
+
+    private void loadData() {
+        tablePanel.clearRows();
+        SwingWorker<List<Map<String, Object>>, Void> w = new SwingWorker<>() {
+            @Override protected List<Map<String, Object>> doInBackground() throws Exception {
+                return DatabaseManager.getInstance().fetchAll(
+                    "SELECT id, dept_name, dept_code, head_name, status, created_at FROM departments ORDER BY dept_name");
+            }
+            @Override protected void done() {
+                try {
+                    for (Map<String, Object> r : get())
+                        tablePanel.addRow(new Object[]{r.get("id"), r.get("dept_name"), r.get("dept_code"), r.get("head_name"), r.get("status"), r.get("created_at")});
+                } catch (Exception ignored) {}
+            }
+        };
+        w.execute();
+    }
+
+    private void openForm(int id) {
+        JDialog dlg = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this),
+            id < 0 ? "Create Department" : "Edit Department", true);
+        dlg.setSize(400, 320);
+        UIHelper.centerWindow(dlg, 400, 320);
+
+        JPanel p = new JPanel(new MigLayout("ins 24, wrap, gap 12", "[][grow]", "[]"));
+        p.setBackground(Color.WHITE);
+
+        JTextField name = new JTextField(14), code = new JTextField(14), head = new JTextField(14);
+        JComboBox<String> status = new JComboBox<>(new String[]{"Active", "Inactive"});
+
+        if (id >= 0) {
+            try {
+                Map<String, Object> r = DatabaseManager.getInstance().fetchOne("SELECT * FROM departments WHERE id=?", id);
+                if (r != null) {
+                    name.setText((String) r.get("dept_name"));
+                    code.setText((String) r.get("dept_code"));
+                    head.setText((String) r.get("head_name"));
+                    status.setSelectedItem(r.get("status"));
+                }
+            } catch (Exception ignored) {}
+        }
+
+        Object[][] rows = {{"Dept Name", name}, {"Short Code", code}, {"Head Person", head}, {"Status", status}};
+        for (Object[] row : rows) {
+            p.add(new JLabel((String) row[0]));
+            p.add((Component) row[1], "growx");
+        }
+
+        JButton save = UIHelper.makeButton("Save Department", UIHelper.SUCCESS);
+        save.addActionListener(e -> {
+            try {
+                String n = name.getText().trim();
+                if (n.isEmpty()) { UIHelper.showWarning(dlg, "Name is required."); return; }
+                
+                if (id < 0) DatabaseManager.getInstance().execute(
+                    "INSERT INTO departments (dept_name, dept_code, head_name, status) VALUES(?,?,?,?)",
+                    n, code.getText().trim(), head.getText().trim(), status.getSelectedItem());
+                else DatabaseManager.getInstance().execute(
+                    "UPDATE departments SET dept_name=?, dept_code=?, head_name=?, status=? WHERE id=?",
+                    n, code.getText().trim(), head.getText().trim(), status.getSelectedItem(), id);
+                dlg.dispose();
+                loadData();
+            } catch (SQLException ex) { UIHelper.showError(dlg, "Error: " + ex.getMessage()); }
+        });
+
+        p.add(save, "skip, growx, gaptop 12");
+        dlg.setContentPane(p);
+        dlg.setVisible(true);
+    }
+
+    private void deleteSelected() {
+        Object idVal = tablePanel.getSelectedValue();
+        if (idVal == null) { UIHelper.showInfo(this, "Select a department first."); return; }
+        
+        int id = (int) idVal;
+        if (!UIHelper.confirm(this, "Confirm Delete", "Permanently delete this department record?")) return;
+        try {
+            DatabaseManager.getInstance().execute("DELETE FROM departments WHERE id=?", id);
+            loadData();
+        } catch (SQLException ex) { UIHelper.showError(this, "Error: " + ex.getMessage()); }
+    }
+}
