@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Report | BHSPL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #6366f1;
+            --text: #334155;
+            --border: #e2e8f0;
+        }
+        
+        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: white; color: var(--text); padding: 40px; margin: 0; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-info h1 { margin: 0; color: var(--primary); font-size: 28px; letter-spacing: 1px; }
+        .company-info p { margin: 5px 0; color: #64748b; font-size: 14px; }
+        
+        .report-title { text-align: right; }
+        .report-title h2 { margin: 0; color: var(--accent); font-size: 22px; text-transform: uppercase; }
+        .report-title p { margin: 5px 0; font-weight: 600; font-size: 13px; }
+        
+        .meta-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+        
+        .meta-item span { display: block; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; }
+        .meta-item b { font-size: 14px; color: var(--primary); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { 
+            background: var(--primary); 
+            color: white; 
+            text-align: left; 
+            padding: 12px 15px; 
+            font-size: 12px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid var(--border); 
+            font-size: 13px;
+        }
+        tr:nth-child(even) { background: #fcfdfe; }
+        
+        .status-present { color: #10b981; font-weight: 700; }
+        .status-absent { color: #ef4444; font-weight: 700; }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+            @page { margin: 1.5cm; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="position: fixed; top: 20px; right: 20px; display: flex; gap: 10px;">
+        <button onclick="window.print()" style="background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Print Report</button>
+        <button onclick="window.close()" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+    </div>
+
+    <div class="header">
+        <div class="company-info">
+            <h1>BAVYA SOLUTIONS</h1>
+            <p>Attendance Management System</p>
+            <p>Generated on: <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MM-yyyy HH:mm')}"></span></p>
+        </div>
+        <div class="report-title">
+            <h2>Raw Punch Log Report</h2>
+            <p th:text="${'Period: ' + selFrom + ' to ' + selTo}">Period: 01-05-2026 to 11-05-2026</p>
+        </div>
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-item">
+            <span>Filter Department</span>
+            <b th:text="${selDept}">All Departments</b>
+        </div>
+        <div class="meta-item">
+            <span>Filter Employee</span>
+            <b th:text="${selEmpName ?: 'All Employees'}">All Employees</b>
+        </div>
+        <div class="meta-item">
+            <span>Total Records</span>
+            <b th:text="${sessions.size()}">0</b>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Emp ID</th>
+                <th>Employee Name</th>
+                <th>Dept</th>
+                <th>Date</th>
+                <th>IN Time</th>
+                <th>OUT Time</th>
+                <th>Punches</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="row : ${sessions}">
+                <td th:text="${row.emp_id}">123</td>
+                <td th:text="${row.emp_name}" style="font-weight: 600;">Employee Name</td>
+                <td th:text="${row.department}">Department</td>
+                <td th:text="${row.date}">2026-05-11</td>
+                <td th:text="${row.in_time}">09:00 AM</td>
+                <td th:text="${row.out_time}">06:00 PM</td>
+                <td th:text="${row.punch_count}" style="text-align: center;">2</td>
+                <td>
+                    <span th:text="${row.status}" 
+                          th:class="${row.status == 'Present' ? 'status-present' : 'status-absent'}">Present</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>&copy; 2026 Bavya Solutions Private Limited. All Rights Reserved.</p>
+    </div>
+</body>
+</html>

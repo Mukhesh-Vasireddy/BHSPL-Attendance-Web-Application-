@@ -114,14 +114,14 @@
 
             function deleteDept(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete department ' + tr.dataset.name + '?')) {
+                showConfirm('Delete Department', 'Delete department ' + tr.dataset.name + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/masters/departments/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
         </script>
     </section>

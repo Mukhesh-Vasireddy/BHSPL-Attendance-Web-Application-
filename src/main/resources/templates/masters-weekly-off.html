@@ -138,16 +138,16 @@
                 document.getElementById('modalTitle').innerText = 'Edit Weekly Off';
                 document.getElementById('offModal').style.display = 'flex';
             }
-            function deleteOff(btn) {
+            function deleteWeeklyOff(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete weekly off for ID ' + tr.dataset.empid + '?')) {
+                showConfirm('Delete Weekly Off', 'Are you sure you want to delete the weekly off setting for ID ' + tr.dataset.empid + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/masters/weekly-off/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
         </script>
     </section>

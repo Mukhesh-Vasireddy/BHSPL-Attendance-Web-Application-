@@ -215,7 +215,10 @@ public class WebController {
     }
 
     @GetMapping("/attendance")
-    public String attendance(Model model, @RequestParam(name = "date", required = false) String date, HttpSession session) {
+    public String attendance(Model model, 
+            @RequestParam(name = "date", required = false) String date, 
+            @RequestParam(name = "status", required = false) String status,
+            HttpSession session) {
         if (session.getAttribute("user") == null) return "redirect:/login";
         try {
             DatabaseManager db = DatabaseManager.getInstance();
@@ -227,8 +230,24 @@ public class WebController {
                     "WHERE e.status='Active' ORDER BY a.in_time DESC, e.emp_name ASC";
 
             List<Map<String, Object>> data = db.query(sql, filterDate);
+            
+            // Filter by status if requested
+            if (status != null && !status.isEmpty() && !"All".equals(status)) {
+                List<Map<String, Object>> filtered = new ArrayList<>();
+                for (Map<String, Object> a : data) {
+                    String s = (String) a.get("status");
+                    if ("Absent".equalsIgnoreCase(status)) {
+                        if (s == null || "A".equalsIgnoreCase(s)) filtered.add(a);
+                    } else if ("Present".equalsIgnoreCase(status)) {
+                        if (s != null && ("P".equalsIgnoreCase(s) || "Present".equalsIgnoreCase(s) || "Late".equalsIgnoreCase(s))) filtered.add(a);
+                    }
+                }
+                data = filtered;
+            }
+
             model.addAttribute("attendance", data);
             model.addAttribute("selDate", filterDate);
+            model.addAttribute("selStatus", (status != null) ? status : "All");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -427,85 +446,74 @@ public class WebController {
             @RequestParam(name = "to", required = false) String to,
             @RequestParam(name = "dept", required = false) String dept,
             @RequestParam(name = "emp", required = false) String emp) {
-        System.err.println(
-                "[" + new java.util.Date() + "] CRITICAL DEBUG: rawLogs called with from=" + from + ", to=" + to);
+        return handleRawLogs(model, from, to, dept, emp, "raw-logs");
+    }
+
+    @GetMapping("/raw-logs/report")
+    public String rawLogsReport(Model model,
+            @RequestParam(name = "from", required = false) String from,
+            @RequestParam(name = "to", required = false) String to,
+            @RequestParam(name = "dept", required = false) String dept,
+            @RequestParam(name = "emp", required = false) String emp) {
+        return handleRawLogs(model, from, to, dept, emp, "report-raw-logs");
+    }
+
+    private String handleRawLogs(Model model, String from, String to, String dept, String emp, String viewName) {
         try {
             DatabaseManager db = DatabaseManager.getInstance();
-            String f = (from != null) ? from : java.time.LocalDate.now().toString();
-            String t = (to != null) ? to : java.time.LocalDate.now().toString();
-            String d = (dept != null) ? dept : "All";
-            String eId = (emp != null) ? emp : "All";
+            String f = (from != null && !from.isEmpty()) ? from : java.time.LocalDate.now().toString();
+            String t = (to != null && !to.isEmpty()) ? to : java.time.LocalDate.now().toString();
+            String d = (dept != null && !dept.trim().isEmpty()) ? dept.trim() : "All";
+            String eId = (emp != null && !emp.trim().isEmpty()) ? emp.trim() : "All";
 
             java.time.LocalDate startDate = java.time.LocalDate.parse(f);
             java.time.LocalDate endDate = java.time.LocalDate.parse(t);
 
-            // Fetch metadata for filters
             model.addAttribute("depts", db.query("SELECT dept_name FROM departments ORDER BY dept_name"));
-            model.addAttribute("employees",
-                    db.query("SELECT emp_id, emp_name FROM employees WHERE status='Active' ORDER BY emp_name"));
+            model.addAttribute("employees", db.query("SELECT emp_id, emp_name FROM employees WHERE status='Active' ORDER BY emp_name"));
 
-            // Fetch all active employees for "Absent" check - SORTED BY NAME
-            String empBaseSql = "SELECT emp_id, emp_name, department, shift FROM employees WHERE status='Active'";
-            if (!"All".equals(d))
-                empBaseSql += " AND department = '" + d + "'";
-            if (!"All".equals(eId))
-                empBaseSql += " AND emp_id = '" + eId + "'";
+            String empBaseSql = "SELECT emp_id, emp_name, department, shift, device_enroll_id FROM employees WHERE status='Active'";
+            if (!"All".equals(d)) empBaseSql += " AND department = '" + d + "'";
+            if (!"All".equals(eId)) empBaseSql += " AND emp_id = '" + eId + "'";
             empBaseSql += " ORDER BY emp_name ASC";
+            
             List<Map<String, Object>> activeEmps = db.query(empBaseSql);
-            System.err.println("[" + new java.util.Date() + "] DEBUG: Active employees found: " + activeEmps.size());
+            
+            if (!"All".equals(eId) && !activeEmps.isEmpty()) {
+                model.addAttribute("selEmpName", activeEmps.get(0).get("emp_name"));
+            }
 
-            // Fetch all raw logs for the range (we will map them in Java for maximum
-            // robustness)
-            StringBuilder logSql = new StringBuilder(
-                    "SELECT * FROM raw_logs WHERE DATE(punch_time) BETWEEN ? AND ? ");
-            logSql.append(" ORDER BY punch_time ASC");
-
-            List<Map<String, Object>> rawLogs = db.query(logSql.toString(), f, t);
-            System.err.println("[" + new java.util.Date() + "] DEBUG: Found " + rawLogs.size()
-                    + " raw logs in DB for range " + f + " to " + t);
-
+            List<Map<String, Object>> rawLogs = db.query("SELECT * FROM raw_logs WHERE DATE(punch_time) BETWEEN ? AND ? ORDER BY punch_time ASC", f, t);
             List<Map<String, Object>> sessions = new ArrayList<>();
             java.time.format.DateTimeFormatter timeFmt = java.time.format.DateTimeFormatter.ofPattern("hh:mm a");
 
-            // Build Enrollment Map (SyncService logic)
             Map<String, String> enrollMap = new HashMap<>();
             for (Map<String, Object> e : activeEmps) {
                 String sid = DatabaseManager.str(e, "emp_id");
                 String eid = DatabaseManager.str(e, "device_enroll_id");
                 enrollMap.put(sid, sid);
-                if (!eid.isEmpty())
-                    enrollMap.put(eid, sid);
+                if (!eid.isEmpty()) enrollMap.put(eid, sid);
                 try {
                     enrollMap.put(String.valueOf(Long.parseLong(sid)), sid);
-                    if (!eid.isEmpty())
-                        enrollMap.put(String.valueOf(Long.parseLong(eid)), sid);
-                } catch (Exception ignored) {
-                }
+                    if (!eid.isEmpty()) enrollMap.put(String.valueOf(Long.parseLong(eid)), sid);
+                } catch (Exception ignored) {}
             }
 
-            // Map logs by Matched Employee + Date
             Map<String, List<Map<String, Object>>> logMap = new HashMap<>();
             for (Map<String, Object> log : rawLogs) {
                 String fullTime = log.get("punch_time").toString().replace("T", " ");
                 String date = fullTime.split(" ")[0];
                 String rawEid = log.get("emp_id").toString().trim();
-
                 String matchedSid = enrollMap.get(rawEid);
                 if (matchedSid == null) {
-                    try {
-                        matchedSid = enrollMap.get(String.valueOf(Long.parseLong(rawEid)));
-                    } catch (Exception ignored) {
-                    }
+                    try { matchedSid = enrollMap.get(String.valueOf(Long.parseLong(rawEid))); } catch (Exception ignored) {}
                 }
-
                 if (matchedSid != null) {
                     String key = matchedSid + "_" + date;
                     logMap.computeIfAbsent(key, k -> new ArrayList<>()).add(log);
                 }
             }
 
-            // Iterate over every employee (Alphabetical) and then every day to build the
-            // full report
             for (Map<String, Object> employee : activeEmps) {
                 String sid = (String) employee.get("emp_id");
                 for (java.time.LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
@@ -514,7 +522,6 @@ public class WebController {
                     List<Map<String, Object>> dayLogs = logMap.get(key);
 
                     if (dayLogs == null || dayLogs.isEmpty()) {
-                        // Mark as Absent as per requirement
                         Map<String, Object> row = new HashMap<>(employee);
                         row.put("date", dateStr);
                         row.put("in_time", "—");
@@ -523,23 +530,16 @@ public class WebController {
                         row.put("status", "Absent");
                         sessions.add(row);
                     } else {
-                        // Process Present sessions
                         int totalPunches = dayLogs.size();
                         for (int i = 0; i < dayLogs.size(); i += 2) {
                             Map<String, Object> session = new HashMap<>(employee);
                             session.put("date", dateStr);
                             session.put("punch_count", totalPunches);
                             session.put("status", "Present");
-
-                            // IN Time
-                            java.time.LocalDateTime inDt = java.time.LocalDateTime
-                                    .parse(dayLogs.get(i).get("punch_time").toString().replace(" ", "T"));
+                            java.time.LocalDateTime inDt = java.time.LocalDateTime.parse(dayLogs.get(i).get("punch_time").toString().replace(" ", "T"));
                             session.put("in_time", inDt.format(timeFmt));
-
-                            // OUT Time
                             if (i + 1 < dayLogs.size()) {
-                                java.time.LocalDateTime outDt = java.time.LocalDateTime
-                                        .parse(dayLogs.get(i + 1).get("punch_time").toString().replace(" ", "T"));
+                                java.time.LocalDateTime outDt = java.time.LocalDateTime.parse(dayLogs.get(i + 1).get("punch_time").toString().replace(" ", "T"));
                                 session.put("out_time", outDt.format(timeFmt));
                             } else {
                                 session.put("out_time", "Wait...");
@@ -555,19 +555,19 @@ public class WebController {
             model.addAttribute("selTo", t);
             model.addAttribute("selDept", d);
             model.addAttribute("selEmp", eId);
-
         } catch (Exception ex) {
             ex.printStackTrace();
             model.addAttribute("error", ex.getMessage());
         }
-        return "raw-logs";
+        return viewName;
     }
 
     @GetMapping("/devices")
-    public String devices(Model model) {
+    public String devices(Model model, HttpSession session) {
+        if (session.getAttribute("user") == null) return "redirect:/login";
         try {
             DatabaseManager db = DatabaseManager.getInstance();
-            List<Map<String, Object>> devices = db.query("SELECT * FROM devices");
+            List<Map<String, Object>> devices = db.query("SELECT * FROM devices ORDER BY device_name");
             model.addAttribute("devices", devices);
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -575,8 +575,50 @@ public class WebController {
         return "devices";
     }
 
+    @PostMapping("/devices/save")
+    public String saveDevice(@RequestParam Map<String, String> params) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            String id = params.get("device_id");
+            String name = params.get("device_name");
+            String ip = params.get("ip_address");
+            String port = params.get("port");
+            String sn = params.get("serial_number");
+            String loc = params.get("location");
+            String status = params.get("status");
+
+            if (id == null || id.isEmpty() || "0".equals(id)) {
+                db.execute(
+                        "INSERT INTO devices (device_name, ip_address, port, serial_number, location, status) VALUES (?,?,?,?,?,?)",
+                        name, ip, port, sn, loc, status);
+            } else {
+                db.execute(
+                        "UPDATE devices SET device_name=?, ip_address=?, port=?, serial_number=?, location=?, status=? WHERE device_id=?",
+                        name, ip, port, sn, loc, status, id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/devices";
+    }
+
+    @PostMapping("/devices/delete")
+    public String deleteDevice(@RequestParam("device_id") String id) {
+        try {
+            DatabaseManager.getInstance().execute("DELETE FROM devices WHERE device_id=?", id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/devices";
+    }
+
     @GetMapping("/leave")
     public String leave(Model model) {
+        return "redirect:/leave/requests";
+    }
+
+    @GetMapping("/leave/manager")
+    public String leaveManager(Model model) {
         List<Map<String, Object>> leaves = new java.util.ArrayList<>();
         List<Map<String, Object>> types = new java.util.ArrayList<>();
         try {
@@ -590,6 +632,44 @@ public class WebController {
         model.addAttribute("leaves", leaves);
         model.addAttribute("leaveTypes", types);
         return "leave";
+    }
+
+    @GetMapping("/leave/requests")
+    public String leaveRequests(Model model) {
+        List<Map<String, Object>> leaves = new java.util.ArrayList<>();
+        int pendingCount = 0;
+        int approvedToday = 0;
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            leaves = db.query("SELECT l.*, e.emp_name FROM leaves l JOIN employees e ON l.emp_id=e.emp_id WHERE l.status='Pending' ORDER BY l.applied_on ASC");
+            
+            List<Map<String, Object>> pStats = db.query("SELECT COUNT(*) as cnt FROM leaves WHERE status='Pending'");
+            if(!pStats.isEmpty()) pendingCount = ((Number)pStats.get(0).get("cnt")).intValue();
+            
+            List<Map<String, Object>> aStats = db.query("SELECT COUNT(*) as cnt FROM leaves WHERE status='Approved' AND DATE(applied_on) = CURDATE()");
+            if(!aStats.isEmpty()) approvedToday = ((Number)aStats.get(0).get("cnt")).intValue();
+
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        model.addAttribute("leaves", leaves);
+        model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("approvedToday", approvedToday);
+        return "leave-requests";
+    }
+
+    @PostMapping("/leave/requests/process")
+    public String processLeave(@RequestParam("id") String id, @RequestParam("status") String status, @RequestParam(value="comment", required=false) String comment) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            // Try to add column if it doesn't exist (compatible with older MySQL)
+            try { db.execute("ALTER TABLE leaves ADD reject_reason TEXT"); } catch(Exception ex) {}
+            
+            db.execute("UPDATE leaves SET status=?, reject_reason=? WHERE id=?", status, comment, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/leave/requests";
     }
 
     @PostMapping("/leave/save")
@@ -672,10 +752,6 @@ public class WebController {
     }
 
     // Leave Sub-menus
-    @GetMapping("/leave/manager")
-    public String leaveManager(Model model) {
-        return leave(model);
-    }
 
     @GetMapping("/leave/od")
     public String leaveOD(Model model) {
@@ -784,6 +860,83 @@ public class WebController {
         }
         model.addAttribute("policies", policies);
         return "leave-policy";
+    }
+
+    @PostMapping("/leave/policy/save")
+    public String savePolicy(
+            @RequestParam(required = false) String id,
+            @RequestParam("leave_type") String leaveType,
+            @RequestParam("days_per_year") double days,
+            @RequestParam("credit_method") String credit,
+            @RequestParam(value = "carry_forward", defaultValue = "0") int carry,
+            @RequestParam("max_carry") double maxCarry,
+            @RequestParam("expire_months") int expire,
+            @RequestParam(value = "encashable", defaultValue = "0") int encash,
+            @RequestParam(value = "pro_rata", defaultValue = "0") int proRata,
+            @RequestParam("applicable_gender") String gender,
+            @RequestParam("status") String status) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            if (id != null && !id.trim().isEmpty()) {
+                db.execute(
+                        "UPDATE leave_policy SET leave_type=?, days_per_year=?, credit_method=?, carry_forward=?, max_carry=?, expire_months=?, encashable=?, pro_rata=?, applicable_gender=?, status=? WHERE id=?",
+                        leaveType, days, credit, carry, maxCarry, expire, encash, proRata, gender, status, id);
+            } else {
+                db.execute(
+                        "INSERT INTO leave_policy (leave_type, days_per_year, credit_method, carry_forward, max_carry, expire_months, encashable, pro_rata, applicable_gender, status) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                        leaveType, days, credit, carry, maxCarry, expire, encash, proRata, gender, status);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/leave/policy";
+    }
+
+    @PostMapping("/leave/policy/delete")
+    public String deletePolicy(@RequestParam("id") String id) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            db.execute("DELETE FROM leave_policy WHERE id=?", id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/leave/policy";
+    }
+
+    @PostMapping("/leave/balance/credit")
+    public String creditLeaves(@RequestParam("type") String type, @RequestParam("amount") double amount) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            int curY = java.time.LocalDate.now().getYear();
+            List<Map<String, Object>> emps = db.query("SELECT emp_id FROM employees WHERE status='Active'");
+            for (Map<String, Object> e : emps) {
+                String empId = e.get("emp_id").toString();
+                int rows = db.execute(
+                        "UPDATE leave_balance SET credited = credited + ?, closing_bal = closing_bal + ? WHERE emp_id=? AND leave_type=? AND year=?",
+                        amount, amount, empId, type, String.valueOf(curY));
+                if (rows == 0) {
+                    db.execute(
+                            "INSERT INTO leave_balance (emp_id, leave_type, year, opening_bal, credited, used, lapsed, closing_bal) VALUES (?, ?, ?, 0, ?, 0, 0, ?)",
+                            empId, type, String.valueOf(curY), amount, amount);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/leave/balance";
+    }
+
+    @PostMapping("/leave/balance/adjust")
+    public String adjustBalance(@RequestParam("empId") String empId, @RequestParam("type") String type,
+            @RequestParam("year") String year, @RequestParam("newBalance") double newBalance) {
+        try {
+            DatabaseManager db = DatabaseManager.getInstance();
+            db.execute("UPDATE leave_balance SET closing_bal = ? WHERE emp_id=? AND leave_type=? AND year=?",
+                    newBalance, empId, type, year);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/leave/balance";
     }
 
     @GetMapping("/leave/balance")

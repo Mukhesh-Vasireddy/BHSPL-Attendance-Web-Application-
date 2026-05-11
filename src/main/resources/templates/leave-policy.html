@@ -67,26 +67,138 @@
             </table>
         </div>
 
-        <script>
+        <!-- Policy Modal -->
+        <div id="policyModal" class="modal">
+            <div class="modal-content" style="width: 700px;">
+                <div class="modal-header">
+                    <h3 id="policyModalTitle">Add Leave Policy</h3>
+                    <span class="close" onclick="closePolicyModal()">&times;</span>
+                </div>
+                <form action="/leave/policy/save" method="POST" id="policyForm" autocomplete="off">
+                    <input type="hidden" name="id" id="fieldId">
+                    <div style="padding: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Leave Type Name</label>
+                            <input type="text" name="leave_type" id="fieldLeaveType" class="form-control" placeholder="e.g. Casual Leave" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Days Per Year</label>
+                            <input type="number" step="0.5" name="days_per_year" id="fieldDays" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Credit Method</label>
+                            <select name="credit_method" id="fieldCredit" class="form-control" required>
+                                <option>Yearly</option>
+                                <option>Monthly</option>
+                                <option>Quarterly</option>
+                                <option>Manual</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Applicable Gender</label>
+                            <select name="applicable_gender" id="fieldGender" class="form-control" required>
+                                <option>All</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status" id="fieldStatus" class="form-control" required>
+                                <option>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px; border: 1px solid var(--glass-border);">
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="carry_forward" id="fieldCarry" value="1" style="width: 18px; height: 18px;">
+                                    Carry Forward
+                                </label>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="encashable" id="fieldEncash" value="1" style="width: 18px; height: 18px;">
+                                    Encashable
+                                </label>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="pro_rata" id="fieldProRata" value="1" style="width: 18px; height: 18px;">
+                                    Pro-Rata Basis
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Max Carry Forward</label>
+                            <input type="number" step="0.5" name="max_carry" id="fieldMaxCarry" class="form-control" value="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Expiry Months (0=Never)</label>
+                            <input type="number" name="expire_months" id="fieldExpire" class="form-control" value="0">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;" onclick="closePolicyModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Policy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            const policies = /*[[${policies}]]*/ [];
+
             function openPolicyModal() {
-                alert('Add Policy modal under development');
+                document.getElementById('policyForm').reset();
+                document.getElementById('fieldId').value = '';
+                document.getElementById('policyModalTitle').innerText = 'Add Leave Policy';
+                document.getElementById('policyModal').style.display = 'flex';
+            }
+
+            function closePolicyModal() {
+                document.getElementById('policyModal').style.display = 'none';
             }
 
             function editPolicy(btn) {
-                const tr = btn.closest('tr');
-                alert('Edit Policy for ID ' + tr.dataset.id + ' under development');
+                const id = btn.closest('tr').dataset.id;
+                const p = policies.find(x => x.id == id);
+                if (!p) return;
+
+                document.getElementById('fieldId').value = p.id;
+                document.getElementById('fieldLeaveType').value = p.leave_type;
+                document.getElementById('fieldDays').value = p.days_per_year;
+                document.getElementById('fieldCredit').value = p.credit_method;
+                document.getElementById('fieldGender').value = p.applicable_gender;
+                document.getElementById('fieldStatus').value = p.status;
+                document.getElementById('fieldMaxCarry').value = p.max_carry;
+                document.getElementById('fieldExpire').value = p.expire_months;
+                
+                document.getElementById('fieldCarry').checked = String(p.carry_forward) == '1';
+                document.getElementById('fieldEncash').checked = String(p.encashable) == '1';
+                document.getElementById('fieldProRata').checked = String(p.pro_rata) == '1';
+
+                document.getElementById('policyModalTitle').innerText = 'Edit Leave Policy';
+                document.getElementById('policyModal').style.display = 'flex';
             }
 
             function deletePolicy(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete leave policy #' + tr.dataset.id + '?')) {
+                showConfirm('Delete Policy', 'Are you sure you want to delete the "' + tr.dataset.type + '" policy?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/leave/policy/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
 
             function searchPolicy() {

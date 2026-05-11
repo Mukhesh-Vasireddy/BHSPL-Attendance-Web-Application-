@@ -113,14 +113,14 @@
 
             function deleteDesig(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete designation ' + tr.dataset.name + '?')) {
+                showConfirm('Delete Designation', 'Delete designation ' + tr.dataset.name + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/masters/designations/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
         </script>
     </section>

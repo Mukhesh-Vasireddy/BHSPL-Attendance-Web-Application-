@@ -141,14 +141,14 @@
 
             function deleteShift(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete shift ' + tr.dataset.name + '?')) {
+                showConfirm('Delete Shift', 'Delete shift ' + tr.dataset.name + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/masters/shifts/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
         </script>
     </section>

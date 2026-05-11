@@ -55,37 +55,66 @@
 
         <!-- User Modal -->
         <div id="userModal" class="modal">
-            <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Create System User</h3>
+                    <h3 id="modalTitle">Create System User</h3>
                     <span class="close" onclick="closeUserModal()">&times;</span>
                 </div>
-                <form action="/system/users/save" method="post" id="userForm">
-                    <div style="padding: 20px;">
+                <form action="/system/users/save" method="post" id="userForm" autocomplete="off">
+                    <input type="hidden" name="id" id="userId">
+                    <div style="padding: 25px;">
                         <div class="form-group">
-                            <label>Username *</label>
-                            <input type="text" name="username" class="form-control" required>
+                            <label>Username</label>
+                            <input type="text" name="username" id="username" class="form-control" required>
                         </div>
-                        <div class="form-group">
-                            <label>Password *</label>
-                            <input type="password" name="password" class="form-control" required>
+                        <div class="form-group" id="passGroup">
+                            <label>Password</label>
+                            <input type="password" name="password" id="password" class="form-control" required>
                         </div>
-                        <div class="form-group">
-                            <label>System Role</label>
-                            <select name="role" class="form-control">
-                                <option>Admin</option>
-                                <option>Operator</option>
-                                <option>HR</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Employee ID</label>
-                            <input type="text" name="empId" class="form-control" placeholder="Optional">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group">
+                                <label>System Role</label>
+                                <select name="role" id="role" class="form-control">
+                                    <option>Admin</option>
+                                    <option>Operator</option>
+                                    <option>HR</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Employee ID</label>
+                                <input type="text" name="empId" id="empId" class="form-control" placeholder="Optional">
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-primary" style="background: #64748B;" onclick="closeUserModal()">Cancel</button>
-                        <button type="submit" class="btn-primary" style="background: #10B981;">Create Account</button>
+                        <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;" onclick="closeUserModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reset Password Modal -->
+        <div id="resetPassModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Reset User Password</h3>
+                    <span class="close" onclick="document.getElementById('resetPassModal').style.display='none'">&times;</span>
+                </div>
+                <form action="/system/users/reset-password" method="POST">
+                    <input type="hidden" name="id" id="resetUserId">
+                    <div style="padding: 25px;">
+                        <div class="form-group">
+                            <label>New Secure Password</label>
+                            <input type="password" name="password" class="form-control" required placeholder="Enter new password">
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">
+                            <i class="fas fa-info-circle"></i> This will immediately update the user's login credentials.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;" onclick="document.getElementById('resetPassModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn-primary">Update Password</button>
                     </div>
                 </form>
             </div>
@@ -93,50 +122,62 @@
 
         <script>
             function openUserModal() {
+                document.getElementById('userForm').reset();
+                document.getElementById('userId').value = '';
+                document.getElementById('passGroup').style.display = 'block';
+                document.getElementById('modalTitle').innerText = 'Create System User';
                 document.getElementById('userModal').style.display = 'flex';
             }
+            
             function closeUserModal() {
                 document.getElementById('userModal').style.display = 'none';
             }
 
+            function editUser(btn) {
+                const tr = btn.closest('tr');
+                document.getElementById('userId').value = tr.dataset.id;
+                document.getElementById('username').value = tr.dataset.user;
+                document.getElementById('role').value = tr.dataset.role;
+                document.getElementById('empId').value = tr.dataset.empid !== 'N/A' ? tr.dataset.empid : '';
+                
+                document.getElementById('passGroup').style.display = 'none';
+                document.getElementById('modalTitle').innerText = 'Edit System User';
+                document.getElementById('userModal').style.display = 'flex';
+            }
+
             function resetUserPass(btn) {
                 const tr = btn.closest('tr');
-                const id = tr.dataset.id;
-                const newPass = prompt('Enter new password for the user:');
-                if (newPass) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/system/users/reset-password';
-                    const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = id;
-                    const passInput = document.createElement('input'); passInput.name = 'password'; passInput.value = newPass;
-                    form.appendChild(idInput); form.appendChild(passInput);
-                    document.body.appendChild(form); form.submit();
-                }
+                document.getElementById('resetUserId').value = tr.dataset.id;
+                document.getElementById('resetPassModal').style.display = 'flex';
             }
 
             function toggleUserStatus(btn) {
                 const tr = btn.closest('tr');
                 const id = tr.dataset.id;
                 const status = tr.dataset.status;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/system/users/toggle-status';
-                const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = id;
-                const statusInput = document.createElement('input'); statusInput.name = 'status'; statusInput.value = status;
-                form.appendChild(idInput); form.appendChild(statusInput);
-                document.body.appendChild(form); form.submit();
+                const newStatus = status === 'Active' ? 'Inactive' : 'Active';
+                
+                showConfirm('Toggle Status', 'Change user status to ' + newStatus + '?', () => {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/system/users/toggle-status';
+                    const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = id;
+                    const statusInput = document.createElement('input'); statusInput.name = 'status'; statusInput.value = status;
+                    form.appendChild(idInput); form.appendChild(statusInput);
+                    document.body.appendChild(form); form.submit();
+                });
             }
 
             function deleteUser(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Delete system user #' + tr.dataset.id + '?')) {
+                showConfirm('Delete User', 'Are you sure you want to delete system user "' + tr.dataset.user + '"?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/system/users/delete';
                     const idInput = document.createElement('input'); idInput.name = 'id'; idInput.value = tr.dataset.id;
                     form.appendChild(idInput);
                     document.body.appendChild(form); form.submit();
-                }
+                });
             }
         </script>
     </section>

@@ -4,64 +4,64 @@
 <body>
     <section>
         <!-- Toolbar -->
-        <div class="card" style="margin-bottom: 15px; padding: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card" style="margin-bottom: 25px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="font-weight: 600; color: #64748B;">Status:</span>
-                    <select id="statusFilter" class="form-control" style="width: 150px;" onchange="filterTable()">
+                    <span style="font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Filter Status:</span>
+                    <select id="statusFilter" onchange="filterTable()" style="width: 160px;">
                         <option>All</option>
                         <option>Pending</option>
                         <option>Approved</option>
                         <option>Rejected</option>
                     </select>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 12px;">
                     <button class="btn-primary" onclick="openLeaveModal()"><i class="fas fa-plus"></i> Apply Leave</button>
-                    <button class="btn-primary" style="background: #10B981;" onclick="updateStatus('Approved')"><i class="fas fa-check"></i> Approve</button>
-                    <button class="btn-primary" style="background: #EF4444;" onclick="updateStatus('Rejected')"><i class="fas fa-times"></i> Reject</button>
-                    <button class="btn-primary" style="background: #334155;" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</button>
+                    <button class="btn-primary" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;" onclick="updateStatus('Approved')"><i class="fas fa-check"></i> Bulk Approve</button>
+                    <button class="btn-primary" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</button>
                 </div>
             </div>
         </div>
 
         <!-- Data Table -->
-        <div class="card">
+        <div class="card" style="padding: 0; overflow: hidden;">
             <table id="leaveTable">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Emp ID</th>
-                        <th>Name</th>
-                        <th>Leave Type</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Days</th>
-                        <th>Status</th>
-                        <th>Applied On</th>
-                        <th style="text-align: center;">Action</th>
+                    <tr style="border-bottom: 1px solid var(--glass-border);">
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">ID</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Employee</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Leave Type</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Date Range</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Days</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Status</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Applied On</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Manager Comment</th>
+                        <th style="padding: 18px 25px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; text-align: center;">Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="leaveTableBody">
                     <tr th:each="l : ${leaves}" th:data-status="${l['status']}" th:data-id="${l['id']}" 
                         th:data-empid="${l['emp_id']}" th:data-type="${l['leave_type']}" th:data-from="${l['from_date']}" 
-                        th:data-to="${l['to_date']}" th:data-days="${l['days']}" th:data-reason="${l['reason']}">
-                        <td th:text="${l['id']}">1</td>
-                        <td th:text="${l['emp_id']}">101</td>
-                        <td th:text="${l['emp_name']}">John Doe</td>
-                        <td th:text="${l['leave_type']}">Casual Leave</td>
-                        <td th:text="${l['from_date']}">2026-05-06</td>
-                        <td th:text="${l['to_date']}">2026-05-07</td>
-                        <td th:text="${l['days']}">1.0</td>
-                        <td>
-                            <span th:text="${l['status']}" 
-                                  th:classappend="${l['status'] == 'Approved' ? 'badge-success' : (l['status'] == 'Rejected' ? 'badge-danger' : 'badge-warning')}"
-                                  class="badge">Pending</span>
+                        th:data-to="${l['to_date']}" th:data-days="${l['days']}" th:data-reason="${l['reason']}"
+                        style="border-bottom: 1px solid var(--glass-border); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='none'">
+                        <td style="padding: 18px 25px; color: white; font-weight: 500;" th:text="${l['id']}">1</td>
+                        <td style="padding: 18px 25px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="color: white; font-weight: 600; font-size: 14px;" th:text="${l['emp_name']}">Employee Name</span>
+                                <span style="color: var(--accent-primary); font-size: 12px;" th:text="${'ID: ' + l['emp_id']}">ID: 101</span>
+                            </div>
                         </td>
-                        <td th:text="${l['applied_on']}">2026-05-05</td>
-                        <td>
-                            <div class="action-col">
-                                <button class="action-btn" style="color: #10B981;" title="Approve" onclick="updateRowStatus(this, 'Approved')"><i class="fas fa-check"></i></button>
-                                <button class="action-btn" style="color: #EF4444;" title="Reject" onclick="updateRowStatus(this, 'Rejected')"><i class="fas fa-times"></i></button>
+                        <td style="padding: 18px 25px; color: #f8fafc; font-size: 13px;" th:text="${l['leave_type']}">Casual</td>
+                        <td style="padding: 18px 25px; color: #f8fafc; font-size: 13px;" th:text="${l['from_date'] + ' to ' + l['to_date']}">2026-05-01</td>
+                        <td style="padding: 18px 25px; color: #f8fafc; font-size: 13px; font-weight: 600;" th:text="${l['days']}">1</td>
+                        <td style="padding: 18px 25px;">
+                            <span th:class="'badge ' + ${l['status'] == 'Approved' ? 'badge-success' : (l['status'] == 'Rejected' ? 'badge-danger' : 'badge-warning')}" 
+                                  th:text="${l['status']}">Pending</span>
+                        </td>
+                        <td style="padding: 18px 25px; font-size: 13px; color: var(--text-muted);" th:text="${l['applied_on'] != null ? l['applied_on'].toString().split(' ')[0] : '—'}">2026-05-05</td>
+                        <td style="padding: 18px 25px; font-size: 13px; color: #94A3B8; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" th:text="${l['reject_reason'] ?: '—'}" th:title="${l['reject_reason']}">—</td>
+                        <td style="padding: 18px 25px;">
+                            <div class="action-col" style="justify-content: center;">
                                 <button class="action-btn edit" title="Edit" onclick="editLeave(this)"><i class="fas fa-pen"></i></button>
                                 <button class="action-btn delete" title="Delete" onclick="deleteLeave(this)"><i class="fas fa-trash"></i></button>
                             </div>
@@ -69,11 +69,65 @@
                     </tr>
                 </tbody>
             </table>
+            <div th:if="${leaves == null or leaves.empty}" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                <i class="fas fa-calendar-times" style="font-size: 64px; margin-bottom: 25px; opacity: 0.1;"></i>
+                <p style="font-size: 16px; font-weight: 500;">No leave applications found.</p>
+            </div>
         </div>
 
-        <!-- Leave Application Modal -->
+        <!-- Apply Leave Modal -->
         <div id="leaveModal" class="modal">
-            <!-- ... (existing modal content) ... -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Apply Leave Request</h3>
+                    <span class="close" onclick="closeLeaveModal()">&times;</span>
+                </div>
+                
+                <form action="/leave/save" method="post" id="leaveForm" autocomplete="off">
+                    <input type="hidden" name="id" id="fieldId">
+                    <input type="hidden" name="status" id="fieldStatus" value="Pending">
+                    
+                    <div style="padding: 25px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group">
+                                <label>Employee ID</label>
+                                <input type="text" name="empId" id="fieldEmpId" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Leave Type</label>
+                                <select name="type" id="fieldType" class="form-control" required>
+                                    <option th:each="t : ${leaveTypes}" th:value="${t.leave_type}" th:text="${t.leave_type}">Casual Leave</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 20px;">
+                            <div class="form-group">
+                                <label>From Date</label>
+                                <input type="date" name="from" id="fieldFrom" class="form-control" required onchange="calcDays()" style="color-scheme: dark;">
+                            </div>
+                            <div class="form-group">
+                                <label>To Date</label>
+                                <input type="date" name="to" id="fieldTo" class="form-control" required onchange="calcDays()" style="color-scheme: dark;">
+                            </div>
+                            <div class="form-group">
+                                <label>Days</label>
+                                <input type="number" name="days" id="fieldDays" class="form-control" readonly style="color: var(--accent-primary); font-weight: 700; background: rgba(0,0,0,0.1);">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Reason <span style="color: #ef4444;">*</span></label>
+                            <textarea name="reason" id="fieldReason" class="form-control" rows="3" style="resize: none;" required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeLeaveModal()" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;">Cancel</button>
+                        <button type="submit" class="btn-primary">Submit Application</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <script>
@@ -92,6 +146,7 @@
             function openLeaveModal() {
                 document.getElementById('leaveForm').reset();
                 document.getElementById('fieldId').value = '';
+                document.getElementById('fieldStatus').value = 'Pending';
                 document.getElementById('modalTitle').innerText = 'Apply Leave Request';
                 document.getElementById('leaveModal').style.display = 'flex';
             }
@@ -101,12 +156,18 @@
             }
 
             function calcDays() {
-                const start = new Date(document.getElementById('fieldFrom').value);
-                const end = new Date(document.getElementById('fieldTo').value);
-                if (start && end && end >= start) {
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                    document.getElementById('fieldDays').value = diffDays;
+                const f = document.getElementById('fieldFrom').value;
+                const t = document.getElementById('fieldTo').value;
+                if (f && t) {
+                    const start = new Date(f);
+                    const end = new Date(t);
+                    if (end >= start) {
+                        const diffTime = Math.abs(end - start);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        document.getElementById('fieldDays').value = diffDays;
+                    } else {
+                        document.getElementById('fieldDays').value = 0;
+                    }
                 }
             }
 
@@ -127,7 +188,7 @@
 
             function deleteLeave(btn) {
                 const tr = btn.closest('tr');
-                if (confirm('Are you sure you want to delete leave request #' + tr.dataset.id + '?')) {
+                showConfirm('Delete Request', 'Are you sure you want to delete leave request #' + tr.dataset.id + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/leave/delete';
@@ -137,13 +198,13 @@
                     form.appendChild(idInput);
                     document.body.appendChild(form);
                     form.submit();
-                }
+                });
             }
 
             function updateRowStatus(btn, newStatus) {
                 const tr = btn.closest('tr');
                 const id = tr.dataset.id;
-                if (confirm('Mark leave request #' + id + ' as ' + newStatus + '?')) {
+                showConfirm(newStatus + ' Request', 'Mark leave request #' + id + ' as ' + newStatus + '?', () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/leave/update-status';
@@ -160,11 +221,11 @@
                     
                     document.body.appendChild(form);
                     form.submit();
-                }
+                });
             }
 
             function updateStatus(newStatus) {
-                alert('Please use the Approve/Reject icons in the Action column for individual requests.');
+                showAlert('Status Update', 'Please use the Edit icon in the Action column to change individual leave statuses.');
             }
         </script>
     </section>

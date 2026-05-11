@@ -10,7 +10,7 @@
                     <i class="fas fa-wallet"></i> Leave Balance
                 </h3>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="background: #10B981;"><i class="fas fa-plus"></i> Credit Leaves</button>
+                    <button class="btn-primary" style="background: #10B981;" onclick="openCreditModal()"><i class="fas fa-plus"></i> Credit Leaves</button>
                     <button class="btn-primary" style="background: #F59E0B;"><i class="fas fa-calendar-check"></i> Year-End Process</button>
                     <button class="btn-primary" style="background: #334155;" onclick="exportTableToExcel('Leave_Balances.xls')"><i class="fas fa-file-excel"></i> Export Excel</button>
                     <button class="btn-primary" style="background: #64748B;" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</button>
@@ -109,13 +109,94 @@
                 </tbody>
             </table>
         </div>
+        <!-- Credit Leaves Modal -->
+        <div id="creditModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Batch Credit Leaves</h3>
+                    <span class="close" onclick="closeModal('creditModal')">&times;</span>
+                </div>
+                <form action="/leave/balance/credit" method="POST" id="creditForm">
+                    <div style="padding: 25px;">
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">This will credit the specified leave type to all active employees for the year <strong th:text="${selYear}">2026</strong>.</p>
+                        
+                        <div class="form-group">
+                            <label>Leave Type</label>
+                            <select name="type" class="form-control" required>
+                                <option th:each="t : ${types}" th:value="${t.leave_type}" th:text="${t.leave_type}"></option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Amount to Credit (Days)</label>
+                            <input type="number" step="0.5" name="amount" class="form-control" placeholder="e.g. 1.0" required>
+                        </div>
+
+                        <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 10px;">
+                            <p style="margin: 0; color: #10b981; font-size: 12px; line-height: 1.4;">
+                                <i class="fas fa-info-circle"></i> This action will increment the "Credited" and "Balance" columns for all matching employee records.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;" onclick="closeModal('creditModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Process Credits</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Adjust Balance Modal -->
+        <div id="adjustModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Adjust Employee Balance</h3>
+                    <span class="close" onclick="closeModal('adjustModal')">&times;</span>
+                </div>
+                <form action="/leave/balance/adjust" method="POST">
+                    <input type="hidden" name="empId" id="adjEmpId">
+                    <input type="hidden" name="type" id="adjType">
+                    <input type="hidden" name="year" id="adjYear">
+                    
+                    <div style="padding: 25px;">
+                        <div style="margin-bottom: 20px;">
+                            <span id="adjTitle" style="color: white; font-weight: 600; font-size: 15px;">Employee Name</span><br>
+                            <span id="adjSub" style="color: var(--text-muted); font-size: 12px;">ID: 101 | Casual Leave (2026)</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>New Balance Amount</label>
+                            <input type="number" step="0.5" name="newBalance" id="adjValue" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.05); color: white;" onclick="closeModal('adjustModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Adjustment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <script>
+            function openCreditModal() {
+                document.getElementById('creditModal').style.display = 'flex';
+            }
+
+            function closeModal(id) {
+                document.getElementById(id).style.display = 'none';
+            }
+
             function adjustBalance(btn) {
                 const tr = btn.closest('tr');
-                const newVal = prompt('Adjust balance for ' + tr.dataset.empid + ' (' + tr.dataset.type + ')?\nCurrent: ' + tr.dataset.bal, tr.dataset.bal);
-                if (newVal !== null) {
-                    alert('Adjustment to ' + newVal + ' under development');
-                }
+                document.getElementById('adjEmpId').value = tr.dataset.empid;
+                document.getElementById('adjType').value = tr.dataset.type;
+                document.getElementById('adjYear').value = tr.dataset.year;
+                document.getElementById('adjValue').value = tr.dataset.bal;
+                
+                document.getElementById('adjTitle').innerText = tr.querySelector('td:nth-child(2)').innerText;
+                document.getElementById('adjSub').innerText = 'ID: ' + tr.dataset.empid + ' | ' + tr.dataset.type + ' (' + tr.dataset.year + ')';
+                
+                document.getElementById('adjustModal').style.display = 'flex';
             }
         </script>
     </section>

@@ -17,18 +17,18 @@
 
         <script>
             function processLogs() {
-                if(confirm('This will process all new biometric logs. Continue?')) {
-                    const btn = event.target.closest('button');
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                const targetBtn = event.target.closest('button');
+                showConfirm('Process Logs', 'This will process all new biometric logs. Continue?', () => {
+                    targetBtn.disabled = true;
+                    targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     fetch('/system/process-logs', {method: 'POST'})
                         .then(r => r.text())
                         .then(msg => {
-                            alert(msg);
-                            location.reload();
+                            showAlert('Process Complete', msg);
+                            setTimeout(() => location.reload(), 2000);
                         })
-                        .catch(e => alert('Error: ' + e));
-                }
+                        .catch(e => showAlert('Error', 'Error: ' + e));
+                });
             }
         </script>
 

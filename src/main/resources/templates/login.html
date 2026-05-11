@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Attendance Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Login | BHSPL Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #BE185D;
-            --primary-dark: #9D174D;
-            --accent-pink: #F472B6;
-            --bg-dark: #0F172A;
-            --text-main: #1E293B;
-            --text-muted: #64748B;
-            --card-bg: #FFFFFF;
+            --primary-bg: #0f172a;
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -25,119 +25,145 @@
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.2) 0px, transparent 50%);
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            color: var(--text-main);
         }
 
-        .login-container {
+        .login-card {
             display: flex;
             width: 1000px;
             max-width: 95vw;
-            height: 650px;
-            background: var(--card-bg);
-            border-radius: 24px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-out;
         }
 
-        /* Left Side: Branding */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
         .branding-side {
-            flex: 1;
-            background: linear-gradient(135deg, #BE185D 0%, #831843 100%);
+            flex: 1.2;
             padding: 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            color: white;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
             position: relative;
-            overflow: hidden;
-        }
-
-        .branding-side::before {
-            content: "";
-            position: absolute;
-            top: -10%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            filter: blur(60px);
+            border-right: 1px solid var(--glass-border);
         }
 
         .branding-side h1 {
-            font-size: 42px;
+            font-size: 56px;
             font-weight: 800;
-            letter-spacing: -1px;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            animation: slideUp 0.8s ease-out;
+            line-height: 1;
+            margin-bottom: 25px;
+            background: linear-gradient(to right, #fff, var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .branding-side p {
             font-size: 18px;
-            opacity: 0.8;
+            color: var(--text-muted);
             line-height: 1.6;
-            animation: slideUp 1s ease-out;
+            max-width: 400px;
         }
 
-        .branding-icon {
-            font-size: 120px;
-            margin-bottom: 40px;
-            opacity: 0.2;
+        .floating-icon {
             position: absolute;
-            bottom: -20px;
-            right: -20px;
+            bottom: -30px;
+            right: -30px;
+            font-size: 250px;
+            color: var(--accent-primary);
+            opacity: 0.05;
+            transform: rotate(-15deg);
         }
 
-        /* Right Side: Form */
         .form-side {
-            width: 450px;
+            flex: 1;
             padding: 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
-        .logo-box {
+        .logo-container {
             margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .logo-box h2 {
-            color: var(--primary);
+        .logo-icon {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            width: 44px;
+            height: 44px;
+            transform: rotate(-10deg);
+        }
+
+        .logo-box {
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo-box.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .logo-box.yellow { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .logo-box.pink { background: linear-gradient(135deg, #ec4899, #be123c); }
+        .logo-box.purple { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+
+        .logo-text {
+            font-size: 36px;
             font-weight: 800;
-            font-size: 28px;
+            letter-spacing: 2px;
+            color: white;
+            line-height: 1;
+        }
+
+        .logo-text span {
+            color: var(--accent-primary);
         }
 
         .welcome-text {
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .welcome-text h3 {
-            font-size: 32px;
-            color: var(--text-main);
-            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
 
         .welcome-text p {
             color: var(--text-muted);
-            font-size: 16px;
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .input-group label {
             display: block;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -148,94 +174,116 @@
 
         .input-wrapper i {
             position: absolute;
-            left: 16px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            font-size: 18px;
+            transition: color 0.3s;
         }
 
         .input-wrapper input {
             width: 100%;
-            padding: 14px 16px 14px 48px;
-            border: 2px solid #F1F5F9;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 16px 50px 16px 55px;
+            border-radius: 18px;
+            color: white;
             font-size: 16px;
             outline: none;
             transition: all 0.3s;
-            background: #F8FAFC;
         }
 
         .input-wrapper input:focus {
-            border-color: var(--primary);
-            background: #FFFFFF;
-            box-shadow: 0 0 0 4px rgba(190, 24, 93, 0.1);
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .input-wrapper input:focus + i {
+            color: var(--accent-primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 20px;
+            left: auto !important;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: var(--accent-primary);
         }
 
         .login-btn {
             width: 100%;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 18px;
+            border-radius: 18px;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 15px;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
         }
 
         .login-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(190, 24, 93, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
         }
 
         .error-msg {
-            background: #FEF2F2;
-            color: #DC2626;
-            padding: 12px;
-            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 15px;
+            border-radius: 15px;
             font-size: 14px;
-            margin-bottom: 20px;
-            border-left: 4px solid #DC2626;
+            margin-bottom: 25px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            gap: 12px;
         }
 
         @media (max-width: 900px) {
             .branding-side { display: none; }
-            .login-container { width: 450px; }
-            .form-side { width: 100%; padding: 40px; }
+            .login-card { width: 450px; border-radius: 30px; }
+            .form-side { padding: 40px; }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="login-card">
         <div class="branding-side">
-            <i class="fas fa-fingerprint branding-icon"></i>
-            <h1>ATTENDANCE<br>HUB</h1>
-            <p>Empowering organizations with smart biometric attendance tracking and real-time workforce analytics.</p>
+            <i class="fas fa-fingerprint floating-icon"></i>
+            <h1>SMART<br>ATTENDANCE</h1>
+            <p>"Connecting people with productivity"</p>
         </div>
         <div class="form-side">
-            <div class="logo-box">
-                <h2>BAVYA</h2>
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <div class="logo-box orange"></div>
+                    <div class="logo-box yellow"></div>
+                    <div class="logo-box pink"></div>
+                    <div class="logo-box purple"></div>
+                </div>
+                <div class="logo-text">BAVY<span>A</span></div>
             </div>
             <div class="welcome-text">
                 <h3>Welcome Back</h3>
-                <p>Please enter your credentials to login.</p>
+                <p>Login to your portal</p>
             </div>
 
             <div th:if="${error}" class="error-msg">
-                <i class="fas fa-exclamation-circle"></i>
-                <span th:text="${error}">Error message here</span>
+                <i class="fas fa-circle-exclamation"></i>
+                <span th:text="${error}">Error message</span>
             </div>
 
             <form action="/login" method="post">
@@ -243,19 +291,34 @@
                     <label>Username</label>
                     <div class="input-wrapper">
                         <i class="fas fa-user"></i>
-                        <input type="text" name="username" placeholder="Enter your username" required autofocus>
+                        <input type="text" name="username" placeholder="Username" required autofocus>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" name="password" id="password" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                     </div>
                 </div>
-                <button type="submit" class="login-btn">Sign In</button>
+                <button type="submit" class="login-btn">Secure Login</button>
             </form>
         </div>
     </div>
+
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function (e) {
+            // toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            // toggle the eye / eye slash icon
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 </body>
 </html>
+

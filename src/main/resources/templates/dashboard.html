@@ -4,14 +4,14 @@
 <body>
     <section>
         <div class="stats-grid">
-            <div class="stat-card present" onclick="window.location.href='/attendance'">
+            <div class="stat-card present" onclick="window.location.href='/attendance?status=Present'">
                 <div class="stat-info">
                     <h3 th:text="${presentCount}">28</h3>
                     <p>Today Present</p>
                 </div>
                 <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
             </div>
-            <div class="stat-card absent" onclick="window.location.href='/attendance'">
+            <div class="stat-card absent" onclick="window.location.href='/attendance?status=Absent'">
                 <div class="stat-info">
                     <h3 th:text="${absentCount}">19</h3>
                     <p>Today Absents</p>
@@ -37,50 +37,29 @@
         <style>
             .weekly-table {
                 width: 100%;
-                border-collapse: separate;
-                border-spacing: 0;
+                border-collapse: collapse;
             }
             .weekly-table th {
-                background: #F8FAFC;
-                color: #64748B;
+                background: rgba(255, 255, 255, 0.02);
+                color: var(--text-muted);
                 font-weight: 600;
                 font-size: 13px;
-                padding: 16px 20px;
+                padding: 18px 25px;
                 text-align: left;
-                border-bottom: 1px solid #E2E8F0;
+                border-bottom: 1px solid var(--glass-border);
+                text-transform: uppercase;
+                letter-spacing: 1px;
             }
             .weekly-table td {
-                padding: 16px 20px;
-                border-bottom: 1px solid #E2E8F0;
-                color: #1E293B;
+                padding: 18px 25px;
+                border-bottom: 1px solid var(--glass-border);
+                color: var(--text-main);
                 font-size: 14px;
                 vertical-align: middle;
-                background: #FFFFFF;
                 transition: background 0.2s;
             }
             .weekly-table tbody tr:hover td {
-                background: #F8FAFC;
-            }
-            .table-container {
-                background: #FFFFFF;
-                border: 1px solid #E2E8F0;
-                border-radius: 12px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-                overflow: hidden;
-            }
-            .table-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 20px;
-                border-bottom: 1px solid #E2E8F0;
-                background: #FFFFFF;
-            }
-            .table-header h3 {
-                margin: 0;
-                color: #0F172A;
-                font-size: 18px;
-                font-weight: 700;
+                background: rgba(255, 255, 255, 0.02);
             }
             .emp-info {
                 display: flex;
@@ -90,14 +69,15 @@
             .emp-avatar {
                 width: 40px;
                 height: 40px;
-                border-radius: 10px;
-                background: #EEF2FF;
+                border-radius: 12px;
+                background: rgba(99, 102, 241, 0.1);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: 700;
-                color: #4F46E5;
+                color: var(--accent-primary);
                 font-size: 16px;
+                border: 1px solid rgba(99, 102, 241, 0.2);
             }
             .emp-details {
                 display: flex;
@@ -105,86 +85,83 @@
             }
             .emp-name {
                 font-weight: 600;
-                color: #1E293B;
+                color: white;
             }
             .emp-dept {
                 font-size: 12px;
-                color: #64748B;
+                color: var(--text-muted);
                 margin-top: 2px;
             }
             .day-number {
                 font-size: 13px;
-                color: #475569;
+                color: var(--text-main);
                 font-weight: 500;
-                margin-bottom: 0;
-                display: block;
             }
-            .status-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 600;
+            .view-select {
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+                border: 1px solid var(--glass-border);
+                border-radius: 12px;
+                padding: 10px 15px;
+                outline: none;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 13px;
+                transition: all 0.3s;
             }
-            .status-pill i {
-                font-size: 10px;
+            .view-select:focus {
+                border-color: var(--accent-primary);
+                box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
             }
-            /* Colors based on variance */
-            .pill-green { background: rgba(5, 150, 105, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); }
-            .pill-orange { background: rgba(217, 119, 6, 0.1); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.2); }
-            .pill-purple { background: rgba(124, 58, 237, 0.1); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.2); }
-            .pill-red { background: rgba(220, 38, 38, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         </style>
 
-        <div class="table-container" style="background:#FFFFFF; border:none; margin-top:20px;">
-            <div class="table-header" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
-                <h3 style="color:#0F172A;">Attendance Dashboard</h3>
-                <div style="display:flex; gap:10px;">
-                    <select id="view-toggle" style="background:#F8FAFC; color:#1E293B; border:1px solid #CBD5E1; border-radius:6px; padding:8px 12px; outline:none; cursor:pointer; font-weight:500; font-size:13px;">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>Attendance Overview</h3>
+                <div style="display:flex; gap:12px;">
+                    <select id="view-toggle" class="view-select">
                         <option value="today">Today's Detailed View</option>
                         <option value="weekly">Weekly Variance Grid</option>
                     </select>
-                    <button class="refresh-btn" style="background:#EEF2FF; color:#4F46E5; border:1px solid #C7D2FE; font-weight:600;"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="refresh-btn"><i class="fas fa-filter"></i> Filter</button>
                 </div>
             </div>
             <div style="overflow-x:auto;">
-                <table class="weekly-table" id="variance-table" style="background:#FFFFFF;">
+                <table class="weekly-table" id="variance-table">
                     <thead>
                         <tr>
-                            <th style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#475569;">Employee</th>
+                            <th>Employee</th>
                             
                             <!-- Today Mode Headers -->
-                            <th class="col-today" style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#475569;">In Time</th>
-                            <th class="col-today" style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#475569;">Punches</th>
-                            <th class="col-today" style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#475569;">Status</th>
+                            <th class="col-today">In Time</th>
+                            <th class="col-today">Punches</th>
+                            <th class="col-today">Status</th>
 
                             <!-- Weekly Mode Headers -->
-                            <th class="col-weekly" style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#475569; display:none;" 
+                            <th class="col-weekly" style="display:none;" 
                                 th:each="day : ${weekDays}" th:text="${day}">Day</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="log : ${recentLogs}">
-                            <td style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
+                            <td>
                                 <div class="emp-info">
                                     <div class="emp-avatar" th:text="${#strings.substring(log.emp_name,0,1)}">E</div>
                                     <div class="emp-details">
-                                        <span class="emp-name" style="color:#1E293B;" th:text="${log.emp_name}">Name</span>
-                                        <span class="emp-dept" style="color:#64748B;" th:text="${log.emp_id}">ID</span>
+                                        <span class="emp-name" th:text="${log.emp_name}">Name</span>
+                                        <span class="emp-dept" th:text="${log.emp_id}">ID</span>
                                     </div>
                                 </div>
                             </td>
                             
                             <!-- Today Mode Data -->
-                            <td class="col-today" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
-                                <span class="day-number" style="margin:0;" th:text="${#temporals.format(log.in_time, 'hh:mm a')}">09:00 AM</span>
+                            <td class="col-today">
+                                <span class="day-number" th:text="${#temporals.format(log.in_time, 'hh:mm a')}">09:00 AM</span>
                             </td>
-                            <td class="col-today" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
-                                <span class="day-number" style="margin:0; font-weight:700;" th:text="${log.punches}">1</span>
+                            <td class="col-today">
+                                <span class="day-number" style="font-weight:700;" th:text="${log.punches}">1</span>
                             </td>
-                            <td class="col-today" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
+                            <td class="col-today">
                                 <span th:if="${#temporals.hour(log.in_time) < 10}" class="status-pill pill-green">
                                     <i class="fas fa-check-circle"></i> On Time
                                 </span>
@@ -194,18 +171,18 @@
                             </td>
 
                             <!-- Weekly Mode Data -->
-                            <td class="col-weekly" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0; display:none;" 
+                            <td class="col-weekly" style="display:none;" 
                                 th:each="dateStr : ${weekDates}">
                                 <span th:if="${weeklyData.get(log.emp_id)?.get(dateStr) == 'P'}" class="status-pill pill-green">
                                     <i class="fas fa-check"></i> P
                                 </span>
-                                <span th:unless="${weeklyData.get(log.emp_id)?.get(dateStr) == 'P'}" class="status-pill pill-red" style="opacity: 0.5;">
+                                <span th:unless="${weeklyData.get(log.emp_id)?.get(dateStr) == 'P'}" class="status-pill pill-red" style="opacity: 0.3;">
                                     -
                                 </span>
                             </td>
                         </tr>
                         <tr th:if="${recentLogs == null or recentLogs.empty}">
-                            <td colspan="8" style="text-align: center; padding: 40px; color: #64748B; background:#FFFFFF;">
+                            <td colspan="8" style="text-align: center; padding: 60px; color: var(--text-muted);">
                                 No attendance records found.
                             </td>
                         </tr>
@@ -214,15 +191,15 @@
             </div>
             
             <!-- Pagination Section -->
-            <div class="pagination-container" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-top: 1px solid #E2E8F0; background: #FFFFFF;">
-                <div style="color: #64748B; font-size: 13px;">
-                    Showing page <span th:text="${currentPage}" style="color: #0F172A; font-weight: 700;">1</span> of <span th:text="${totalPages}" style="color: #0F172A; font-weight: 700;">1</span>
+            <div class="pagination-container" style="display: flex; align-items: center; justify-content: space-between; padding: 25px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.1);">
+                <div style="color: var(--text-muted); font-size: 13px;">
+                    Showing page <span th:text="${currentPage}" style="color: white; font-weight: 700;">1</span> of <span th:text="${totalPages}" style="color: white; font-weight: 700;">1</span>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <a th:if="${currentPage > 1}" th:href="@{/(page=${currentPage - 1})}" class="page-link" style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; color: #475569; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 14px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s;">
+                <div style="display: flex; gap: 12px;">
+                    <a th:if="${currentPage > 1}" th:href="@{/(page=${currentPage - 1})}" class="btn-primary" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">
                         <i class="fas fa-chevron-left"></i> Previous
                     </a>
-                    <a th:if="${currentPage < totalPages}" th:href="@{/(page=${currentPage + 1})}" class="page-link" style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; color: #475569; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 14px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s;">
+                    <a th:if="${currentPage < totalPages}" th:href="@{/(page=${currentPage + 1})}" class="btn-primary" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">
                         Next <i class="fas fa-chevron-right"></i>
                     </a>
                 </div>
