@@ -26,9 +26,15 @@
                     <div th:text="${db}" style="font-weight: 500; color: var(--text-main);">MySQL</div>
                     
                     <div style="text-align: right; font-weight: 700; color: var(--text-muted);">ADMS Protocol:</div>
-                    <div th:text="${admsStatus}" 
-                         th:style="${#strings.contains(admsStatus, 'Active') ? 'color: #10B981; font-weight: 700;' : 'color: #EF4444; font-weight: 700;'}">
-                        Active
+                    <div style="display: flex; flex-direction: column;">
+                        <div th:text="${admsStatus}" 
+                             th:style="${#strings.contains(admsStatus, 'Active') ? 'color: #10B981; font-weight: 700;' : 'color: #EF4444; font-weight: 700;'}">
+                            Active
+                        </div>
+                        <div th:if="${admsError != null}" 
+                             th:style="${#strings.contains(admsStatus, 'Active') ? 'display: none;' : 'color: #EF4444; font-size: 12px; margin-top: 4px; font-style: italic;'}">
+                            Error: <span th:text="${admsError}">Error message</span>
+                        </div>
                     </div>
                     
                     <div style="text-align: right; font-weight: 700; color: var(--text-muted);">ADMS Port:</div>

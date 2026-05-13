@@ -66,8 +66,8 @@ public class WebController {
     public String index(Model model, @RequestParam(name = "page", defaultValue = "1") int page, HttpSession session) {
         if (session.getAttribute("user") == null) return "redirect:/login";
         
-        // Ensure ADMS/Push Service is running (Self-Healing)
-        if (!com.bhspl.service.PushService.isRunning()) {
+        // Ensure ADMS/Push Service is running (Self-Healing) - Only if not manually stopped
+        if (!com.bhspl.service.PushService.isRunning() && !com.bhspl.service.PushService.isUserStopped()) {
             com.bhspl.service.PushService.start();
         }
 
@@ -1087,6 +1087,13 @@ public class WebController {
 
     @GetMapping("/system")
     public String system(Model model) {
+        boolean isRunning = com.bhspl.service.PushService.isRunning();
+        boolean isInternal = com.bhspl.service.PushService.isInternalRunning();
+        String statusText = isInternal ? "Active (Listening)" : (isRunning ? "Active (Handled by Worker)" : "Inactive");
+        
+        model.addAttribute("admsStatus", statusText);
+        model.addAttribute("admsPort", com.bhspl.service.PushService.getPort());
+        model.addAttribute("admsError", com.bhspl.service.PushService.getLastError());
         return "system";
     }
 
@@ -1365,8 +1372,8 @@ public class WebController {
 
     @GetMapping("/system/settings")
     public String systemSettings(Model model) {
-        // Ensure ADMS/Push Service is running
-        if (!com.bhspl.service.PushService.isRunning()) {
+        // Ensure ADMS/Push Service is running - Only if not manually stopped
+        if (!com.bhspl.service.PushService.isRunning() && !com.bhspl.service.PushService.isUserStopped()) {
             com.bhspl.service.PushService.start();
         }
 
@@ -1375,8 +1382,13 @@ public class WebController {
         model.addAttribute("runtime", "Java 17 (OpenJDK)");
         model.addAttribute("framework", "Spring Boot 3.x / Web Interface");
         model.addAttribute("db", "MySQL 8.0 (Connector/J)");
-        model.addAttribute("admsStatus", com.bhspl.service.PushService.isRunning() ? "Active (Listening)" : "Inactive");
+        boolean isRunning = com.bhspl.service.PushService.isRunning();
+        boolean isInternal = com.bhspl.service.PushService.isInternalRunning();
+        String statusText = isInternal ? "Active (Listening)" : (isRunning ? "Active (Handled by Worker)" : "Inactive");
+        
+        model.addAttribute("admsStatus", statusText);
         model.addAttribute("admsPort", com.bhspl.service.PushService.getPort());
+        model.addAttribute("admsError", com.bhspl.service.PushService.getLastError());
         return "system-settings";
     }
 

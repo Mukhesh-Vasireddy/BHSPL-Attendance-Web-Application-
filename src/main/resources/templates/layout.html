@@ -11,17 +11,19 @@
 
         :root {
             --sidebar-width: 280px;
-            --primary-bg: #f4f7fa;
-            --sidebar-bg: #ffffff;
+            --primary-bg: #f8fafc;
+            --sidebar-bg: #0f172a;
             --accent-primary: #6366f1;
             --accent-secondary: #a855f7;
             --accent-vibrant: #ec4899;
             --accent-purple: #8b5cf6;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-bg: #ffffff;
             --glass-border: rgba(0, 0, 0, 0.08);
             --card-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+            --nav-text: #94a3b8;
+            --nav-active: #ffffff;
         }
 
         body {
@@ -110,18 +112,91 @@
             padding: 30px 0;
             flex-shrink: 0;
             z-index: 100;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden !important;
+        }
+
+        .sidebar.collapsed {
+            width: 90px;
+        }
+
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .nav-item span,
+        .sidebar.collapsed .user-profile span {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .logo-container {
+            width: 100% !important;
+            margin: 0 0 40px 0 !important;
+            padding: 15px 0 !important;
+            justify-content: center !important;
+            background: transparent !important;
+            border: none !important;
+            display: flex !important;
+        }
+
+        .sidebar.collapsed .nav-item {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 15px 0 !important;
+            margin: 0 0 8px 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .sidebar.collapsed .nav-item i {
+            margin: 0 !important;
+        }
+
+        .sidebar.collapsed .sub-menu {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .user-profile {
+            padding: 20px 0 !important;
+            justify-content: center !important;
+            border-top: none !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+        }
+
+        .sidebar.collapsed .user-profile div:first-child {
+            width: 42px !important;
+            height: 42px !important;
+            min-width: 42px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            flex-shrink: 0;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .sidebar.collapsed .user-profile .profile-info {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        /* Logic for toggle button */
+        #sidebarToggle {
+            display: flex !important;
         }
 
         .logo-container {
             margin: 0 25px 40px;
             padding: 15px;
-            background: #ffffff;
-            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             display: flex;
             align-items: center;
             gap: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
 
@@ -149,11 +224,10 @@
         .logo-box.purple { background: linear-gradient(135deg, #a855f7, #7c3aed); }
 
         .logo-text {
-            color: var(--text-main);
+            color: #ffffff;
             font-size: 26px;
             font-weight: 800;
             letter-spacing: 1px;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
         }
@@ -176,14 +250,13 @@
             padding: 14px 20px;
             display: flex;
             align-items: center;
-            color: var(--text-muted);
+            color: var(--nav-text);
             text-decoration: none;
             font-size: 15px;
             font-weight: 500;
             border-radius: 14px;
             margin-bottom: 5px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid transparent;
         }
 
         .nav-item i {
@@ -194,37 +267,35 @@
         }
 
         .nav-item.active {
-            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.02));
-            color: var(--accent-primary);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.05);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--nav-active);
+            box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5);
         }
 
         .nav-item.active i {
-            color: var(--accent-primary);
+            color: var(--nav-active);
         }
 
         .nav-item:hover:not(.active) {
-            background: #f1f5f9;
-            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--nav-active);
             transform: translateX(5px);
         }
 
         /* Sub-menu Styling */
         .sub-menu {
-            background: #f1f5f9;
+            background: rgba(255, 255, 255, 0.03);
             padding: 8px;
             border-radius: 14px;
             margin: 5px 0 15px 15px;
-            border: 1px solid var(--glass-border);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .sub-item {
             display: flex;
             align-items: center;
             padding: 10px 15px;
-            color: var(--text-muted);
+            color: var(--nav-text);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -239,8 +310,8 @@
         }
 
         .sub-item:hover {
-            color: var(--accent-secondary);
-            background: rgba(168, 85, 247, 0.1);
+            color: var(--nav-active);
+            background: rgba(255, 255, 255, 0.05);
             padding-left: 20px;
         }
 
@@ -721,7 +792,7 @@
 <body>
     <div class="sidebar">
         <a href="/" style="text-decoration: none;">
-            <div class="logo-container">
+            <div class="logo-container" style="margin: 0 25px 40px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease;">
                 <div class="logo-icon">
                     <div class="logo-box yellow"></div>
                     <div class="logo-box orange"></div>
@@ -733,27 +804,27 @@
         </a>
         <nav class="nav-menu">
             <a href="/" th:classappend="${activeLink == 'dashboard' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-th-large"></i> Dashboard</a>
+                    class="fas fa-th-large"></i> <span>Dashboard</span></a>
             <a href="/employees" th:classappend="${activeLink == 'employees' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-users"></i> Employee Master</a>
+                    class="fas fa-users"></i> <span>Employee Master</span></a>
             <a href="/attendance" th:classappend="${activeLink == 'attendance' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-user-clock"></i> Attendance</a>
+                    class="fas fa-user-clock"></i> <span>Attendance</span></a>
             <!-- Reports Menu -->
             <a href="/reports" th:classappend="${activeLink == 'reports' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-chart-bar"></i> Reports</a>
+                    class="fas fa-chart-bar"></i> <span>Reports</span></a>
             <div class="sub-menu" th:if="${activeLink == 'reports'}">
                 <a href="/reports/daily" class="sub-item"><i class="fas fa-calendar-day"></i> Daily Attendance</a>
                 <a href="/reports/monthly" class="sub-item"><i class="fas fa-calendar-alt"></i> Monthly Summary</a>
                 <a href="/reports/leave" class="sub-item"><i class="fas fa-file-invoice"></i> Leave Report</a>
             </div>
             <a href="/raw-logs" th:classappend="${activeLink == 'raw-logs' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-history"></i> Raw Punch Log</a>
+                    class="fas fa-history"></i> <span>Raw Punch Log</span></a>
             <a href="/devices" th:classappend="${activeLink == 'devices' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-microchip"></i> Device Manager</a>
+                    class="fas fa-microchip"></i> <span>Device Manager</span></a>
 
             <!-- Leave Menu -->
             <a href="/leave" th:classappend="${activeLink == 'leave' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-calendar-alt"></i> Leave</a>
+                    class="fas fa-calendar-alt"></i> <span>Leave</span></a>
             <div class="sub-menu" th:if="${activeLink == 'leave'}">
                 <a href="/leave/manager" class="sub-item"><i class="fas fa-tasks"></i> Leave Manager</a>
                 <a href="/leave/requests" class="sub-item"><i class="fas fa-check-circle"></i> Leave Requests</a>
@@ -765,7 +836,7 @@
 
             <!-- Masters Menu -->
             <a href="/masters" th:classappend="${activeLink == 'masters' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-database"></i> Masters</a>
+                    class="fas fa-database"></i> <span>Masters</span></a>
             <div class="sub-menu" th:if="${activeLink == 'masters'}">
                 <a href="/masters/departments" class="sub-item"><i class="fas fa-building"></i> Departments</a>
                 <a href="/masters/designations" class="sub-item"><i class="fas fa-id-badge"></i> Designations</a>
@@ -775,7 +846,7 @@
 
             <!-- System Menu -->
             <a href="/system" th:classappend="${activeLink == 'system' ? 'active' : ''}" class="nav-item"><i
-                    class="fas fa-cog"></i> System</a>
+                    class="fas fa-cog"></i> <span>System</span></a>
             <div class="sub-menu" th:if="${activeLink == 'system'}">
                 <a href="/system/users" class="sub-item"><i class="fas fa-users-cog"></i> User Management</a>
                 <a href="/system/settings" class="sub-item"><i class="fas fa-sliders-h"></i> Settings</a>
@@ -785,22 +856,26 @@
         </nav>
 
         <div class="user-profile" th:if="${session.user != null}"
-            style="padding: 20px; border-top: 1px solid #1E293B; margin-top: auto; display: flex; align-items: center; gap: 15px;">
-            <div
-                style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 800; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);">
-                <i class="fas fa-user-shield" th:if="${session.role == 'Administrator'}" style="font-size: 16px;"></i>
-                <span th:unless="${session.role == 'Administrator'}" th:text="${session.user.substring(0,1).toUpperCase()}">A</span>
+            style="padding: 20px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: auto; display: flex; align-items: center; width: 100%; background: transparent; overflow: hidden; position: relative;">
+            <div class="avatar-circle"
+                style="width: 42px; height: 42px; min-width: 42px; min-height: 42px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; margin: 0 auto; z-index: 2;">
+                <i class="fas fa-user" style="font-size: 18px; color: #0f172a !important;"></i>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="color: var(--text-main); font-weight: 600; font-size: 15px; letter-spacing: 0.3px;" th:text="${session.user}">Admin</span>
-                <span style="color: var(--text-muted); font-size: 13px; font-weight: 500;" th:text="${session.role}">Administrator</span>
+            <div class="profile-info" style="display: flex; flex-direction: column; gap: 2px; margin-left: 15px; overflow: hidden; flex: 1;">
+                <span style="color: #ffffff; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; white-space: nowrap;" th:text="${session.user}">Admin</span>
+                <span style="color: #94a3b8; font-size: 12px; font-weight: 500; white-space: nowrap;" th:text="${session.role}">Administrator</span>
             </div>
         </div>
     </div>
 
     <div class="main-content">
         <div class="top-bar">
-            <h2 th:text="${title}">Page Title</h2>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button id="sidebarToggle" onclick="toggleSidebar()" style="background: var(--glass-bg); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 12px; cursor: pointer; color: var(--text-main); align-items: center; justify-content: center; transition: all 0.2s; box-shadow: var(--card-shadow);">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 th:text="${title}" style="margin: 0;">Page Title</h2>
+            </div>
             <div style="display: flex; gap: 20px; align-items: center;">
                 <span id="date-time" style="font-size: 13px; color: #64748B; font-weight: 500;">Tue, 05 May 17:58:00</span>
                 <a href="/logout"
@@ -832,6 +907,10 @@
     </div>
 
     <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        }
+
         let confirmCallback = null;
         function showConfirm(title, message, callback) {
             document.getElementById('confirmTitle').innerText = title;

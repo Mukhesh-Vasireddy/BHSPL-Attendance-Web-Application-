@@ -57,22 +57,22 @@
 
         <!-- Matrix Table -->
         <div class="card" style="padding: 0; overflow: hidden; position: relative;">
-            <div style="overflow-x: auto;">
-                <table class="matrix-table" style="width: 100%; border-collapse: collapse; min-width: 1200px;">
-                    <thead style="position: sticky; top: 0; z-index: 10;">
+            <div style="overflow-x: auto; background: #ffffff;">
+                <table class="matrix-table" style="width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px;">
+                    <thead style="position: sticky; top: 0; z-index: 100; background: #f8fafc;">
                         <tr>
-                            <th class="sticky-col" style="width: 60px;">ID</th>
-                            <th class="sticky-col" style="left: 60px; min-width: 180px;">Employee Name</th>
-                            <th class="sticky-col" style="left: 240px; min-width: 140px;">Designation</th>
+                            <th class="sticky-col" style="width: 70px; min-width: 70px; max-width: 70px;">ID</th>
+                            <th class="sticky-col" style="left: 70px; min-width: 180px; max-width: 180px;">Employee Name</th>
+                            <th class="sticky-col" style="left: 250px; min-width: 140px; max-width: 140px;">Designation</th>
                             <th th:each="d : ${days}" th:text="${d + '/' + (selMonth.startsWith('0') ? selMonth.substring(1) : selMonth) + '/' + selYear}" 
-                                style="min-width: 90px;">1/5/2026</th>
+                                style="min-width: 90px; background: #f8fafc;">1/5/2026</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="r : ${data}">
-                            <td class="sticky-col" th:text="${r['emp_id']}">101</td>
-                            <td class="sticky-col" th:text="${r['emp_name']}" style="left: 60px; font-weight: 600; color: var(--text-main);">John Doe</td>
-                            <td class="sticky-col" th:text="${r['designation'] ?: '--'}" style="left: 240px;">Developer</td>
+                            <td class="sticky-col" th:text="${r['emp_id']}" style="width: 70px; min-width: 70px; max-width: 70px;">101</td>
+                            <td class="sticky-col" th:text="${r['emp_name']}" style="left: 70px; min-width: 180px; max-width: 180px; font-weight: 600; color: var(--text-main);">John Doe</td>
+                            <td class="sticky-col" th:text="${r['designation'] ?: '--'}" style="left: 250px; min-width: 140px; max-width: 140px;">Developer</td>
                             
                             <td th:each="status : ${r['days']}" 
                                 th:text="${status}"
@@ -102,15 +102,17 @@
             .matrix-table td { 
                 font-size: 11px; 
                 padding: 12px 10px !important; 
-                border: 1px solid var(--glass-border);
+                border-bottom: 1px solid var(--glass-border);
+                border-right: 1px solid var(--glass-border);
                 text-align: center;
                 vertical-align: middle;
                 color: var(--text-main);
+                background: #ffffff;
             }
             .matrix-table .sticky-col {
                 position: sticky;
                 left: 0;
-                background: #ffffff;
+                background: #ffffff !important;
                 z-index: 5;
                 border-right: 1px solid var(--glass-border) !important;
                 text-align: left !important;
@@ -125,7 +127,7 @@
             .cell-sun { color: #3B82F6 !important; background: #eff6ff !important; }
             .cell-holiday { 
                 color: #A855F7 !important; 
-                background: rgba(168, 85, 247, 0.05) !important; 
+                background: #fdf4ff !important; 
                 font-size: 9px !important; 
                 line-height: 1.1;
                 font-weight: 700;

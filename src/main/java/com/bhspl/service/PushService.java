@@ -20,6 +20,8 @@ public class PushService {
     private static HttpServer server;
     private static int PORT = 8081;
     private static boolean running = false;
+    private static boolean userStopped = false;
+    private static String lastError = null;
 
     public static void start() {
         start(PORT);
@@ -31,6 +33,7 @@ public class PushService {
                 System.out.println("PushService (ADMS) is already running.");
                 return;
             }
+            userStopped = false; // Reset flag when manually started
             PORT = port;
             server = HttpServer.create(new InetSocketAddress(PORT), 0);
             server.createContext("/iclock/cdata", new CDataHandler());
@@ -42,6 +45,7 @@ public class PushService {
             running = true;
             System.out.println("PushService (ADMS) started successfully on port " + PORT);
         } catch (IOException e) {
+            lastError = e.getMessage();
             System.err.println("CRITICAL: Failed to start PushService (ADMS) on port " + PORT + ". Reason: " + e.getMessage());
             if (e.getMessage().contains("Address already in use")) {
                 System.err.println("Suggestion: Check if another application or another instance of this app is already using port " + PORT);
@@ -51,19 +55,86 @@ public class PushService {
     }
 
     public static void stop() {
+        System.out.println("PushService: Stopping service...");
+        userStopped = true; // Set flag to prevent self-healing
         if (server != null) {
-            server.stop(0);
-            server = null;
-            running = false;
+            try {
+                server.stop(0);
+                server = null;
+            } catch (Exception e) {
+                System.err.println("PushService: Error stopping server: " + e.getMessage());
+            }
+        }
+        
+        // Aggressive cleanup: check if port is still busy and force it closed
+        running = false;
+        forceStop();
+        
+        // Wait a moment for OS to release the socket
+        try { Thread.sleep(500); } catch (Exception ignored) {}
+        System.out.println("PushService: Service stopped.");
+    }
+
+    public static void forceStop() {
+        try {
+            long currentPid = ProcessHandle.current().pid();
+            // Find PID on port 8081 (Windows)
+            Process p = Runtime.getRuntime().exec("cmd /c netstat -ano | findstr :" + PORT);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("LISTENING")) {
+                    String[] parts = line.trim().split("\\s+");
+                    String pidStr = parts[parts.length - 1];
+                    long pid = Long.parseLong(pidStr);
+                    
+                    if (pid != currentPid) {
+                        // Kill the external process
+                        Runtime.getRuntime().exec("taskkill /F /PID " + pidStr);
+                        System.out.println("PushService: Forced stop of EXTERNAL process " + pidStr + " on port " + PORT);
+                    } else {
+                        System.out.println("PushService: Current process is holding the port, server.stop() should handle it.");
+                    }
+                    running = false;
+                    lastError = null;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("PushService: Failed to force stop: " + e.getMessage());
         }
     }
 
     public static boolean isRunning() {
+        if (running) {
+            lastError = null;
+            return true;
+        }
+        try {
+            // Use OS command to check if port is listening
+            Process p = Runtime.getRuntime().exec("cmd /c netstat -ano | findstr LISTENING | findstr :" + PORT);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            boolean isFound = reader.readLine() != null;
+            if (isFound) lastError = null;
+            return isFound;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isInternalRunning() {
         return running;
     }
 
     public static int getPort() {
         return PORT;
+    }
+
+    public static String getLastError() {
+        return lastError;
+    }
+
+    public static boolean isUserStopped() {
+        return userStopped;
     }
 
     static class CDataHandler implements HttpHandler {
