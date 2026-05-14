@@ -334,6 +334,8 @@
             backdrop-filter: blur(8px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
+            position: relative;
+            z-index: 900;
         }
 
         .top-bar h2 {
@@ -773,12 +775,138 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+        /* Profile Dropdown Styling */
+        .profile-dropdown {
+            position: relative;
+            z-index: 1100;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 5px 15px 5px 5px;
+            background: #ffffff;
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--card-shadow);
+        }
+
+        .profile-trigger:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .profile-trigger .avatar-circle {
+            width: 38px;
+            height: 38px;
+            background: #ffffff;
+            color: var(--sidebar-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        .profile-trigger .profile-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .profile-trigger .user-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: capitalize;
+        }
+
+        .profile-trigger .user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .profile-trigger i.chevron {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 5px;
+            transition: transform 0.3s;
+        }
+
+        .profile-dropdown.active i.chevron {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 240px;
+            background: #ffffff;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 10px 15px rgba(0,0,0,0.05);
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            animation: dropdownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1200;
+        }
+
+        .profile-dropdown.active .dropdown-menu {
+            display: flex;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #f1f5f9;
+            color: var(--accent-primary);
+        }
+
+        .dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 5px;
+            border-top: 1px solid #f1f5f9;
+            border-radius: 0 0 12px 12px;
+            padding-top: 15px;
+        }
+
+        .dropdown-item.logout:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 width: 80px;
                 padding: 20px 0;
             }
-            .logo-text, .nav-item span, .user-profile div:last-child {
+            .logo-text, .nav-item span {
                 display: none;
             }
             .logo-container { margin: 0 10px 30px; padding: 10px; }
@@ -854,18 +982,6 @@
                 <a href="/system/about" class="sub-item"><i class="fas fa-info-circle"></i> About</a>
             </div>
         </nav>
-
-        <div class="user-profile" th:if="${session.user != null}"
-            style="padding: 20px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: auto; display: flex; align-items: center; width: 100%; background: transparent; overflow: hidden; position: relative;">
-            <div class="avatar-circle"
-                style="width: 42px; height: 42px; min-width: 42px; min-height: 42px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; margin: 0 auto; z-index: 2;">
-                <i class="fas fa-user" style="font-size: 18px; color: #0f172a !important;"></i>
-            </div>
-            <div class="profile-info" style="display: flex; flex-direction: column; gap: 2px; margin-left: 15px; overflow: hidden; flex: 1;">
-                <span style="color: #ffffff; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; white-space: nowrap;" th:text="${session.user}">Admin</span>
-                <span style="color: #94a3b8; font-size: 12px; font-weight: 500; white-space: nowrap;" th:text="${session.role}">Administrator</span>
-            </div>
-        </div>
     </div>
 
     <div class="main-content">
@@ -878,12 +994,28 @@
             </div>
             <div style="display: flex; gap: 20px; align-items: center;">
                 <span id="date-time" style="font-size: 13px; color: #64748B; font-weight: 500;">Tue, 05 May 17:58:00</span>
-                <a href="/logout"
-                    style="display: flex; align-items: center; gap: 8px; color: #EF4444; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 16px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); transition: all 0.2s;"
-                    onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.transform='translateY(-1px)';"
-                    onmouseout="this.style.background='rgba(239, 68, 68, 0.05)'; this.style.transform='translateY(0)';">
-                    <i class="fas fa-sign-out-alt"></i> Sign Out
-                </a>
+                
+                <!-- Profile Dropdown -->
+                <div class="profile-dropdown" id="profileDropdown" th:if="${session.user != null}">
+                    <div class="profile-trigger" onclick="toggleProfileDropdown(event)">
+                        <div class="avatar-circle">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-text">
+                            <span class="user-name" th:text="${session.user}">Admin</span>
+                            <span class="user-role" th:text="${session.role}">Administrator</span>
+                        </div>
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="/system/settings" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i> Profile Settings
+                        </a>
+                        <a href="/logout" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -909,6 +1041,20 @@
     <script>
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('collapsed');
+        }
+
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('profileDropdown').classList.toggle('active');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('.profile-dropdown')) {
+                const dropdown = document.getElementById('profileDropdown');
+                if (dropdown && dropdown.classList.contains('active')) {
+                    dropdown.classList.remove('active');
+                }
+            }
         }
 
         let confirmCallback = null;
