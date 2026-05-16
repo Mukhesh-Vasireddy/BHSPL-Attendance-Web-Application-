@@ -6,23 +6,32 @@
     <section>
         <!-- Header Actions -->
         <div class="card" style="margin-bottom: 25px; padding: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--text-main);">Daily Attendance View</h2>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--text-main);">Daily Attendance View
+                </h2>
                 <form action="/attendance" method="get" style="display: flex; gap: 15px; align-items: flex-end;">
                     <div>
-                        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Attendance Date</label>
+                        <label
+                            style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Attendance
+                            Date</label>
                         <input type="date" name="date" class="form-control" th:value="${selDate}"
                             style="width: 180px; background: #ffffff; border: 1px solid #e2e8f0; color: var(--text-main); border-radius: 12px; padding: 10px 15px;">
                     </div>
                     <div>
-                        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Filter Status</label>
-                        <select name="status" class="form-control" style="width: 150px; background: #ffffff; border: 1px solid #e2e8f0; color: var(--text-main); border-radius: 12px; padding: 10px 15px;">
+                        <label
+                            style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Filter
+                            Status</label>
+                        <select name="status" class="form-control"
+                            style="width: 150px; background: #ffffff; border: 1px solid #e2e8f0; color: var(--text-main); border-radius: 12px; padding: 10px 15px;">
                             <option value="All" th:selected="${selStatus == 'All'}">All Records</option>
                             <option value="Present" th:selected="${selStatus == 'Present'}">Present Only</option>
                             <option value="Absent" th:selected="${selStatus == 'Absent'}">Absent Only</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-primary" style="height: 45px; padding: 0 25px; background: var(--accent-primary);"><i class="fas fa-filter"></i> Apply Filter</button>
+                    <button type="submit" class="btn-primary"
+                        style="height: 45px; padding: 0 25px; background: var(--accent-primary);"><i
+                            class="fas fa-filter"></i> Apply Filter</button>
                 </form>
             </div>
         </div>
@@ -33,20 +42,38 @@
                 <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
                     <thead>
                         <tr style="background: #f8fafc;">
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Employee ID</th>
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Employee Name</th>
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Shift</th>
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">In Time</th>
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Out Time</th>
-                            <th style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Total Hours</th>
-                            <th style="padding: 18px 25px; text-align: center; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">Status</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Employee ID</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Employee Name</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Shift</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                In Time</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Out Time</th>
+                            <th
+                                style="padding: 18px 25px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Total Hours</th>
+                            <th
+                                style="padding: 18px 25px; text-align: center; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border);">
+                                Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="a : ${attendance}" style="border-bottom: 1px solid var(--glass-border); transition: background 0.2s;">
-                            <td th:text="${a['emp_id']}" style="padding: 18px 25px; font-weight: 500; color: var(--text-muted);">101</td>
-                            <td th:text="${a['emp_name']}" style="padding: 18px 25px; font-weight: 700; color: var(--text-main);">John Doe</td>
-                            <td th:text="${a['shift'] ?: '--'}" style="padding: 18px 25px; color: var(--text-main);">Day</td>
+                        <tr th:each="a : ${attendance}"
+                            style="border-bottom: 1px solid var(--glass-border); transition: background 0.2s;">
+                            <td th:text="${a['emp_id']}"
+                                style="padding: 18px 25px; font-weight: 500; color: var(--text-muted);">101</td>
+                            <td th:text="${a['emp_name']}"
+                                style="padding: 18px 25px; font-weight: 700; color: var(--text-main);">John Doe</td>
+                            <td th:text="${a['shift'] ?: '--'}" style="padding: 18px 25px; color: var(--text-main);">Day
+                            </td>
                             <td th:text="${a['in_time'] != null ? #strings.substring(a['in_time'], 11, 16) : '--:--'}"
                                 style="padding: 18px 25px; color: var(--text-main); font-weight: 600;">09:00</td>
                             <td th:text="${a['out_time'] != null ? #strings.substring(a['out_time'], 11, 16) : '--:--'}"
@@ -54,24 +81,26 @@
                             <td th:text="${a['work_hours'] != null ? #numbers.formatDecimal(a['work_hours'], 1, 2) : '0.00'}"
                                 style="padding: 18px 25px; color: var(--text-main); font-weight: 700;">8.00</td>
                             <td style="padding: 18px 25px; text-align: center;">
-                                <span th:if="${a['status'] == 'P' or a['status'] == 'Present'}" 
-                                      style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.2);">
-                                      <i class="fas fa-check-circle" style="margin-right: 5px;"></i> PRESENT
+                                <span th:if="${a['status'] == 'P' or a['status'] == 'Present'}"
+                                    style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.2);">
+                                    <i class="fas fa-check-circle" style="margin-right: 5px;"></i> PRESENT
                                 </span>
-                                <span th:if="${a['status'] == 'Late'}" 
-                                      style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.2);">
-                                      <i class="far fa-clock" style="margin-right: 5px;"></i> LATE
+                                <span th:if="${a['status'] == 'Late'}"
+                                    style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.2);">
+                                    <i class="far fa-clock" style="margin-right: 5px;"></i> LATE
                                 </span>
-                                <span th:if="${a['status'] == 'A' or a['status'] == null}" 
-                                      style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2);">
-                                      <i class="fas fa-times-circle" style="margin-right: 5px;"></i> ABSENT
+                                <span th:if="${a['status'] == 'A' or a['status'] == null}"
+                                    style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2);">
+                                    <i class="fas fa-times-circle" style="margin-right: 5px;"></i> ABSENT
                                 </span>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(attendance)}">
                             <td colspan="7" style="text-align: center; padding: 80px; color: var(--text-muted);">
-                                <i class="fas fa-user-clock" style="font-size: 48px; margin-bottom: 20px; opacity: 0.2;"></i>
-                                <p style="font-size: 16px; font-weight: 500;">No attendance records found for this date.</p>
+                                <i class="fas fa-user-clock"
+                                    style="font-size: 48px; margin-bottom: 20px; opacity: 0.2;"></i>
+                                <p style="font-size: 16px; font-weight: 500;">No attendance records found for this date.
+                                </p>
                             </td>
                         </tr>
                     </tbody>
