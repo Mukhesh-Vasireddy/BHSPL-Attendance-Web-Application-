@@ -35,6 +35,14 @@ public class PushService {
             }
             userStopped = false; // Reset flag when manually started
             PORT = port;
+            
+            // Self-healing: if the port is occupied by a ghost process, force stop it first
+            if (isRunning() && !running) {
+                System.out.println("PushService: Port " + PORT + " is occupied externally. Force-stopping ghost process...");
+                forceStop();
+                try { Thread.sleep(800); } catch (Exception ignored) {}
+            }
+            
             server = HttpServer.create(new InetSocketAddress(PORT), 0);
             server.createContext("/iclock/cdata", new CDataHandler());
             server.createContext("/iclock/getrequest", new GetRequestHandler());
@@ -43,6 +51,7 @@ public class PushService {
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
             running = true;
+            lastError = null;
             System.out.println("PushService (ADMS) started successfully on port " + PORT);
         } catch (IOException e) {
             lastError = e.getMessage();

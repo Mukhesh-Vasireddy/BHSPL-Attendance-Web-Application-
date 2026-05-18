@@ -9,8 +9,8 @@
     <style>
         :root {
             --primary-bg: #f8fafc;
-            --accent-primary: #6366f1;
-            --accent-secondary: #a855f7;
+            --accent-primary: #0284c7;
+            --accent-secondary: #0d9488;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --glass-bg: rgba(255, 255, 255, 0.8);
@@ -27,8 +27,8 @@
         body {
             background-color: var(--primary-bg);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.05) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.05) 0px, transparent 50%);
             height: 100vh;
             display: flex;
             align-items: center;
@@ -61,9 +61,10 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            background: linear-gradient(135deg, #f5f3ff, #faf5ff);
             position: relative;
             border-right: 1px solid var(--glass-border);
+            overflow: hidden;
         }
 
         .branding-side h1 {
@@ -71,24 +72,30 @@
             font-weight: 800;
             line-height: 1;
             margin-bottom: 25px;
-            color: var(--text-main);
+            color: #0f172a;
+            position: relative;
+            z-index: 2;
         }
 
         .branding-side p {
             font-size: 18px;
-            color: var(--text-muted);
+            color: #64748b;
             line-height: 1.6;
             max-width: 400px;
+            position: relative;
+            z-index: 2;
         }
 
         .floating-icon {
             position: absolute;
-            bottom: -30px;
-            right: -30px;
-            font-size: 250px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 550px;
             color: var(--accent-primary);
-            opacity: 0.05;
-            transform: rotate(-15deg);
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .form-side {
@@ -97,6 +104,14 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #faf5ff, #f5f3ff);
+        }
+
+        .logo-container, .welcome-text, .error-msg, form {
+            position: relative;
+            z-index: 2;
         }
 
         .logo-container {
@@ -135,7 +150,7 @@
 
         .logo-text span {
             color: var(--accent-primary);
-            text-shadow: 0 0 25px rgba(99, 102, 241, 0.4), 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-shadow: 0 0 25px rgba(2, 132, 199, 0.3), 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .welcome-text {
@@ -194,7 +209,7 @@
         .input-wrapper input:focus {
             border-color: var(--accent-primary);
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.15);
         }
 
         .input-wrapper input:focus + i {
@@ -228,12 +243,12 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 15px;
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2);
         }
 
         .login-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 15px 30px rgba(2, 132, 199, 0.3);
             filter: brightness(1.1);
         }
 
@@ -260,11 +275,11 @@
 <body>
     <div class="login-card">
         <div class="branding-side">
-            <i class="fas fa-fingerprint floating-icon"></i>
             <h1>SMART<br>ATTENDANCE</h1>
             <p>"Connecting people with productivity"</p>
         </div>
         <div class="form-side">
+            <i class="fas fa-fingerprint floating-icon"></i>
             <div class="logo-container">
                 <div class="logo-icon">
                     <div class="logo-box orange"></div>
@@ -284,11 +299,6 @@
                 <span th:text="${error}">Error message</span>
             </div>
 
-            <div th:if="${param.timeout}" class="error-msg" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); border-color: rgba(99, 102, 241, 0.2);">
-                <i class="fas fa-clock"></i>
-                <span>Your session has expired. Please login again.</span>
-            </div>
-
             <form action="/login" method="post">
                 <div class="input-group">
                     <label>Username</label>
@@ -305,7 +315,7 @@
                         <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                     </div>
                 </div>
-                <button type="submit" class="login-btn">Secure Login</button>
+                <button type="submit" class="login-btn">Login</button>
             </form>
         </div>
     </div>

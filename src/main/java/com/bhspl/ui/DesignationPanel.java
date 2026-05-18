@@ -138,8 +138,10 @@ package com.bhspl.ui;
              StringBuilder sql = new StringBuilder("SELECT * FROM designations");
              if (!filter.isEmpty()) {
                  sql.append(" WHERE desig_name LIKE '%").append(filter).append("%'");
+                 sql.append(" ORDER BY CASE WHEN desig_name LIKE '").append(filter).append("%' THEN 0 ELSE 1 END, level_order ASC, desig_name ASC");
+             } else {
+                 sql.append(" ORDER BY level_order ASC, desig_name ASC");
              }
-             sql.append(" ORDER BY level_order ASC, desig_name ASC");
              
              List<Map<String, Object>> rows = DatabaseManager.getInstance().query(sql.toString());
              for (Map<String, Object> r : rows) {

@@ -147,9 +147,11 @@ public class LeavePolicyPanel extends JPanel {
                     return DatabaseManager.getInstance().query("SELECT * FROM leave_policy ORDER BY id");
                 } else {
                     String pattern = "%" + search + "%";
+                    String startsWith = search + "%";
                     return DatabaseManager.getInstance().query(
-                        "SELECT * FROM leave_policy WHERE leave_type LIKE ? OR description LIKE ? ORDER BY id", 
-                        pattern, pattern
+                        "SELECT * FROM leave_policy WHERE leave_type LIKE ? OR description LIKE ? " +
+                        "ORDER BY CASE WHEN leave_type LIKE ? THEN 0 WHEN description LIKE ? THEN 1 ELSE 2 END, id", 
+                        pattern, pattern, startsWith, startsWith
                     );
                 }
             }

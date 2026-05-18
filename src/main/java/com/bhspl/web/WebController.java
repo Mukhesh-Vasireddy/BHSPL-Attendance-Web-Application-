@@ -70,7 +70,8 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport,
             HttpSession session) {
-        if (isExport) { /* Dashboard uses fixed 10 but we'll override if needed */ }
+        if (isExport) {
+            /* Dashboard uses fixed 10 but we'll override if needed */ }
 
         // Ensure ADMS/Push Service is running (Self-Healing) - Only if not manually
         // stopped
@@ -79,8 +80,10 @@ public class WebController {
         }
 
         try {
-            DatabaseManager.getInstance().execute("UPDATE raw_logs SET synced=0 WHERE punch_time >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
-        } catch (Exception ignored) {}
+            DatabaseManager.getInstance()
+                    .execute("UPDATE raw_logs SET synced=0 WHERE punch_time >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
+        } catch (Exception ignored) {
+        }
 
         try {
             DatabaseManager db = DatabaseManager.getInstance();
@@ -90,7 +93,8 @@ public class WebController {
             // Stats
             long totalEmps = db.queryLong("SELECT COUNT(*) FROM employees WHERE status='Active'");
             long presentCount = db
-                    .queryLong("SELECT COUNT(DISTINCT r.emp_id) FROM raw_logs r JOIN employees e ON r.emp_id = e.emp_id WHERE DATE(r.punch_time) = CURDATE() AND e.status = 'Active'");
+                    .queryLong(
+                            "SELECT COUNT(DISTINCT r.emp_id) FROM raw_logs r JOIN employees e ON r.emp_id = e.emp_id WHERE DATE(r.punch_time) = CURDATE() AND e.status = 'Active'");
             long leaveCount = db.queryLong(
                     "SELECT COUNT(*) FROM leaves WHERE status='Approved' AND CURDATE() BETWEEN from_date AND to_date");
             long absentCount = totalEmps - presentCount - leaveCount;
@@ -105,7 +109,8 @@ public class WebController {
                 totalPages = 1;
 
             // New Analytics
-            long lateCount = db.queryLong("SELECT COUNT(*) FROM attendance WHERE punch_date = CURDATE() AND status = 'Late'");
+            long lateCount = db
+                    .queryLong("SELECT COUNT(*) FROM attendance WHERE punch_date = CURDATE() AND status = 'Late'");
             long devicesOnline = db.queryLong("SELECT COUNT(*) FROM devices WHERE status = 'Active'");
             long pendingLeaves = db.queryLong("SELECT COUNT(*) FROM leaves WHERE status = 'Pending'");
             long weeklyOffCount = db.queryLong(
@@ -113,8 +118,10 @@ public class WebController {
 
             // Recent Logs (Live Attendance Overview)
             String searchFilter = "";
+            String orderBy = "MAX(r.punch_time) DESC";
             if (search != null && !search.isEmpty()) {
                 searchFilter = " AND (e.emp_name LIKE '%" + search + "%' OR r.emp_id LIKE '%" + search + "%') ";
+                orderBy = "CASE WHEN LOWER(e.emp_name) LIKE LOWER('" + search + "%') THEN 0 WHEN LOWER(r.emp_id) LIKE LOWER('" + search + "%') THEN 1 ELSE 2 END, " + orderBy;
             }
 
             List<Map<String, Object>> recentLogs = db.query(
@@ -127,7 +134,7 @@ public class WebController {
                             "LEFT JOIN employees e ON r.emp_id = e.emp_id " +
                             "WHERE DATE(r.punch_time) = CURDATE() AND e.status = 'Active' " + searchFilter +
                             "GROUP BY r.emp_id, e.emp_name " +
-                            "ORDER BY MAX(r.punch_time) DESC LIMIT " + pageSize + " OFFSET " + offset);
+                            "ORDER BY " + orderBy + " LIMIT " + pageSize + " OFFSET " + offset);
 
             // Weekly Data mapping
             Map<String, Map<String, String>> weeklyData = new java.util.HashMap<>();
@@ -140,15 +147,17 @@ public class WebController {
                 weekDates.add(d.toString());
                 weekDays.add(d.format(dayFormatter));
             }
-            
+
             // Calculate Total Presents for the Bar Chart
             List<Long> weeklyPresentCounts = new java.util.ArrayList<>();
             for (String d : weekDates) {
-                long presentOnDay = db.queryLong("SELECT COUNT(DISTINCT r.emp_id) FROM raw_logs r JOIN employees e ON r.emp_id = e.emp_id WHERE DATE(r.punch_time) = ? AND e.status = 'Active'", d);
+                long presentOnDay = db.queryLong(
+                        "SELECT COUNT(DISTINCT r.emp_id) FROM raw_logs r JOIN employees e ON r.emp_id = e.emp_id WHERE DATE(r.punch_time) = ? AND e.status = 'Active'",
+                        d);
                 weeklyPresentCounts.add(presentOnDay);
             }
             model.addAttribute("weeklyPresentCounts", weeklyPresentCounts);
-            
+
             // Fetch Latest Sync Time
             String lastSync = db.queryString("SELECT MAX(last_sync) FROM devices");
             model.addAttribute("lastSync", lastSync != null ? lastSync : "Never");
@@ -245,8 +254,10 @@ public class WebController {
             int offset = (page - 1) * pageSize;
 
             String where = " WHERE 1=1";
+            String orderBy = "emp_name";
             if (search != null && !search.isEmpty()) {
                 where += " AND (emp_name LIKE '%" + search + "%' OR emp_id LIKE '%" + search + "%')";
+                orderBy = "CASE WHEN LOWER(emp_name) LIKE LOWER('" + search + "%') THEN 0 WHEN LOWER(emp_id) LIKE LOWER('" + search + "%') THEN 1 ELSE 2 END, " + orderBy;
             }
 
             long total = db.queryLong("SELECT COUNT(*) FROM employees" + where);
@@ -254,7 +265,7 @@ public class WebController {
             if (totalPages == 0)
                 totalPages = 1;
 
-            String sql = "SELECT * FROM employees" + where + " ORDER BY emp_name LIMIT " + pageSize + " OFFSET "
+            String sql = "SELECT * FROM employees" + where + " ORDER BY " + orderBy + " LIMIT " + pageSize + " OFFSET "
                     + offset;
 
             List<Map<String, Object>> employees = db.query(sql);
@@ -369,7 +380,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         List<Map<String, Object>> data = new java.util.ArrayList<>();
         try {
             DatabaseManager db = DatabaseManager.getInstance();
@@ -414,7 +428,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         List<Map<String, Object>> matrix = new java.util.ArrayList<>();
         try {
             DatabaseManager db = DatabaseManager.getInstance();
@@ -556,7 +573,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         List<Map<String, Object>> data = new java.util.ArrayList<>();
         try {
             DatabaseManager db = DatabaseManager.getInstance();
@@ -601,7 +621,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         return handleRawLogs(model, from, to, dept, emp, "raw-logs", page, pageSize);
     }
 
@@ -614,7 +637,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         return handleRawLogs(model, from, to, dept, emp, "report-raw-logs", page, pageSize);
     }
 
@@ -749,7 +775,7 @@ public class WebController {
     }
 
     @GetMapping("/devices")
-    public String devices(Model model, HttpSession session, 
+    public String devices(Model model, HttpSession session,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize) {
         if (session.getAttribute("user") == null)
@@ -817,7 +843,7 @@ public class WebController {
     }
 
     @GetMapping("/leave/manager")
-    public String leaveManager(Model model, 
+    public String leaveManager(Model model,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize) {
         List<Map<String, Object>> leaves = new java.util.ArrayList<>();
@@ -847,7 +873,7 @@ public class WebController {
     }
 
     @GetMapping("/leave/requests")
-    public String leaveRequests(Model model, 
+    public String leaveRequests(Model model,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize) {
         List<Map<String, Object>> leaves = new java.util.ArrayList<>();
@@ -984,7 +1010,7 @@ public class WebController {
     // Leave Sub-menus
 
     @GetMapping("/leave/od")
-    public String leaveOD(Model model, 
+    public String leaveOD(Model model,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize) {
         List<Map<String, Object>> depts = new java.util.ArrayList<>();
@@ -1094,7 +1120,7 @@ public class WebController {
     }
 
     @GetMapping("/leave/policy")
-    public String leavePolicy(Model model, 
+    public String leavePolicy(Model model,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize) {
         List<Map<String, Object>> policies = new java.util.ArrayList<>();
@@ -1245,7 +1271,10 @@ public class WebController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int pageSize,
             @RequestParam(name = "export", defaultValue = "false") boolean isExport) {
-        if (isExport) { pageSize = 50000; page = 1; }
+        if (isExport) {
+            pageSize = 50000;
+            page = 1;
+        }
         try {
             DatabaseManager db = DatabaseManager.getInstance();
             int offset = (page - 1) * pageSize;
@@ -1495,15 +1524,18 @@ public class WebController {
             int offset = (page - 1) * pageSize;
 
             String where = "";
-            if (search != null && !search.isEmpty())
+            String orderBy = "level_order ASC, desig_name ASC";
+            if (search != null && !search.isEmpty()) {
                 where = " WHERE desig_name LIKE '%" + search + "%'";
+                orderBy = "CASE WHEN LOWER(desig_name) LIKE LOWER('" + search + "%') THEN 0 ELSE 1 END, " + orderBy;
+            }
 
             long total = db.queryLong("SELECT COUNT(*) FROM designations" + where);
             int totalPages = (int) Math.ceil((double) total / pageSize);
             if (totalPages == 0)
                 totalPages = 1;
 
-            String sql = "SELECT * FROM designations" + where + " ORDER BY level_order ASC, desig_name ASC LIMIT "
+            String sql = "SELECT * FROM designations" + where + " ORDER BY " + orderBy + " LIMIT "
                     + pageSize + " OFFSET " + offset;
             desigs = db.query(sql);
 
@@ -2006,6 +2038,7 @@ public class WebController {
         }
         return "redirect:" + (redirect != null ? redirect : "/");
     }
+
     @GetMapping("/logo-reveal")
     public String logoReveal() {
         return "logo-reveal";

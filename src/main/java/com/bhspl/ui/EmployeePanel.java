@@ -117,9 +117,11 @@ public class EmployeePanel extends JPanel {
             protected List<Map<String, Object>> doInBackground() throws Exception {
                 DatabaseManager db = DatabaseManager.getInstance();
                 String sql = "SELECT emp_id, emp_name, department, designation, shift, phone, status " +
-                        "FROM employees WHERE emp_name LIKE ? OR emp_id LIKE ? ORDER BY emp_name";
+                        "FROM employees WHERE emp_name LIKE ? OR emp_id LIKE ? " +
+                        "ORDER BY CASE WHEN emp_name LIKE ? THEN 0 WHEN emp_id LIKE ? THEN 1 ELSE 2 END, emp_name";
                 String like = "%" + search + "%";
-                return db.fetchAll(sql, like, like);
+                String startsWith = search + "%";
+                return db.fetchAll(sql, like, like, startsWith, startsWith);
             }
 
             @Override

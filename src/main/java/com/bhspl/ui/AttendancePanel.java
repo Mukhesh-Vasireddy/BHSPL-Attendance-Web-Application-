@@ -146,10 +146,11 @@ public class AttendancePanel extends JPanel {
                         "LEFT JOIN attendance a ON e.emp_id=a.emp_id AND a.punch_date=? " +
                         "WHERE e.status='Active' AND (e.emp_id LIKE ? OR e.emp_name LIKE ?) " +
                         "GROUP BY e.emp_id, e.emp_name " +
-                        "ORDER BY e.emp_name ASC";
+                        "ORDER BY CASE WHEN e.emp_name LIKE ? THEN 0 WHEN e.emp_id LIKE ? THEN 1 ELSE 2 END, e.emp_name ASC";
                 String like = "%" + search + "%";
+                String startsWith = search + "%";
                 List<Map<String, Object>> data = DatabaseManager.getInstance().fetchAll(sql, date, date, date, date,
-                        date, date, date, date, date, date, date, like, like);
+                        date, date, date, date, date, date, date, like, like, startsWith, startsWith);
 
                 List<Object[]> rows = new java.util.ArrayList<>();
                 for (Map<String, Object> r : data) {
